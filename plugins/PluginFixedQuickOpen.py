@@ -24,7 +24,6 @@ class FixedQuickOpenPlugin(object):
 
         def new_updater(this, parent=False):
             editor_uri = this._Updater__editor.pwd_uri
-            print editor_uri
             
             root = None
             for p in settings.recent_pathes:
