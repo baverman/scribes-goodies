@@ -1,4 +1,6 @@
 import time
+import os
+from gio import File
 
 name = "Fixed Quick Open plugin"
 authors = ["Anton Bobrov <bobrov@vl.ru>"]
@@ -8,35 +10,40 @@ class_name = "FixedQuickOpenPlugin"
 short_description = "Keep start directory from changing"
 long_description = "Patches original QuickOpen for emmiting only start directory"
 
+import quick_open_settings as settings
+
 class FixedQuickOpenPlugin(object):
 
     def __init__(self, editor):
         editor.response()
         self.editor = editor
-		
+        self.last_root = None
+
     def load(self):
-        # Try to import Updater class
-        for i in range(10):
-            try:
-                from QuickOpen.FolderPathUpdater import Updater
-                break
-            except ImportError:
-                self.editor.response()
-                time.sleep(0.5)
-                
-        if i > 9:
-            print "Can't import QuickOpen.FolderPathUpdater.Updater"
-            return
-
-        import os
-        from gio import File
-
-        path = File(os.curdir).get_uri()
-
-        old_updater = Updater._Updater__update
+        from QuickOpen.FolderPathUpdater import Updater
 
         def new_updater(this, parent=False):
-            this._Updater__manager.emit("current-path", path)
+            editor_uri = this._Updater__editor.pwd_uri
+            print editor_uri
+            
+            root = None
+            for p in settings.recent_pathes:
+                if editor_uri.startswith(p):
+                    root = p
+                    break
+
+            if not root:
+                root = self.find_project_root(editor_uri)
+                settings.recent_pathes.append(root)
+
+            
+            if parent:
+                i = settings.recent_pathes.index(self.last_root or root)
+                root = settings.recent_pathes[(i + 1) % len(settings.recent_pathes)]
+                self.last_root = root
+
+            this._Updater__manager.emit("current-path", root)
+
             return False
 
         Updater._Updater__update = new_updater
@@ -44,3 +51,16 @@ class FixedQuickOpenPlugin(object):
 
     def unload(self):
         pass
+
+    def find_project_root(self, path):
+        f = File(path)
+        while True:
+            if f.get_child('.scribes_project').query_exists():
+                return f.get_uri()
+
+            p = f.get_parent()
+            if p:
+                f = p
+            else:
+                return path
+
