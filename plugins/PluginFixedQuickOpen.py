@@ -1,6 +1,7 @@
 import time
 import os
 from gio import File
+import gobject
 
 name = "Fixed Quick Open plugin"
 authors = ["Anton Bobrov <bobrov@vl.ru>"]
@@ -12,6 +13,7 @@ long_description = "Patches original QuickOpen for emmiting only start directory
 
 import quick_open_settings as settings
 
+
 class FixedQuickOpenPlugin(object):
 
     def __init__(self, editor):
@@ -19,7 +21,7 @@ class FixedQuickOpenPlugin(object):
         self.editor = editor
         self.last_root = None
 
-    def load(self):
+    def do_patch(self):
         from QuickOpen.FolderPathUpdater import Updater
 
         def new_updater(this, parent=False):
@@ -47,6 +49,19 @@ class FixedQuickOpenPlugin(object):
 
         Updater._Updater__update = new_updater
 
+    def check_core_plugins(self, *args):
+        try:
+            from QuickOpen.FolderPathUpdater import Updater
+            self.do_patch()
+        except ImportError:
+            print "Can't find core plugins. Waiting ant try again"
+            gobject.timeout_add(300, self.check_core_plugins)
+
+        return False
+
+
+    def load(self):
+        self.check_core_plugins()
 
     def unload(self):
         pass
