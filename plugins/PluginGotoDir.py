@@ -1,5 +1,6 @@
 from scribes_helpers import Plugin, Signal, SignalManager, Trigger
 import subprocess
+from gettext import gettext as _
 
 name = "GotoDir Plugin"
 authors = ["Anton Bobrov <bobrov@vl.ru>"]
@@ -10,8 +11,8 @@ short_description = "Opens file directory"
 long_description = "Opens file directory in thunar file manager"
 
 
-trigger = Trigger("activate-goto-dir", "<ctrl><alt>l", 
-    _("Opens file directory in file manage"), _("Open dir"))
+trigger = Trigger("open-file-directory", "<ctrl><alt>l", 
+    _("Opens file directory in file manager"), _("File Operations"))
 
 
 class GotoDirPlugin(Plugin):
