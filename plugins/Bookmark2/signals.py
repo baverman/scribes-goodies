@@ -1,6 +1,6 @@
 from scribes_helpers import SignalManager, Signal
 
-class BookmarkSignals(SignalManager):
+class Signals(SignalManager):
     destroy        = Signal()
     toggle         = Signal()
     remove_all     = Signal()
@@ -14,6 +14,3 @@ class BookmarkSignals(SignalManager):
     model_data     = Signal(1)
     scroll_to_line = Signal(1)
     updated_model  = Signal()
-    
-    
-signals = BookmarkSignals()

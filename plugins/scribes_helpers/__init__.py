@@ -3,7 +3,7 @@ import sys
 from SCRIBES.TriggerManager import TriggerManager
 
 from .weak import weak_connect
-from .signals import Signal, Trigger, SignalManager, connect_signals, connect_triggers
+from .signals import Signal, Trigger, SignalManager, connect_triggers
 
 class Plugin(object):
     def __init__(self, editor):
@@ -12,7 +12,6 @@ class Plugin(object):
         self.triggers = TriggerManager(editor)
         editor.response()
         
-        connect_signals(self)
         connect_triggers(self, self.triggers)
     
     def load(self):

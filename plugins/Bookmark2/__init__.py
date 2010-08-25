@@ -4,16 +4,16 @@ from gobject import idle_add
 
 from scribes_helpers import Plugin, Trigger, weak_connect
 
-from signals import signals
-from Utils import create_bookmark_image, BOOKMARK_NAME
+from .signals import Signals
+from .Utils import create_bookmark_image, BOOKMARK_NAME
 
-from Feedback import Feedback
-from MarkReseter import Reseter
-from MarkUpdater import Updater
-from Marker import Marker
-from GUI.Manager import Manager as GuiManager
+from .Feedback import Feedback
+from .MarkReseter import Reseter
+from .MarkUpdater import Updater
+from .Marker import Marker
+from .GUI.Manager import Manager as GuiManager
 
-from Metadata import set_value, get_value
+from .Metadata import set_value, get_value
 
 
 trigger_toggle = Trigger("toggle-bookmark", "<ctrl>d",
@@ -30,18 +30,21 @@ class BookmarkPlugin(Plugin):
     def __init__(self, editor):
         super(BookmarkPlugin, self).__init__(editor)
         
+        self.signals = Signals()
+        self.signals.connect_signals(self)
+        
         # WTF? in original plugin there is no popup menu item, so commented
         #editor.textview.connect("populate-popup", self.pupulate_popup)
         
         create_bookmark_image(editor)
         
-        self.feedback_manager = Feedback(editor)
-        self.mark_reseter = Reseter(editor)
-        self.mark_updater = Updater(editor)
-        self.marker = Marker(editor)
+        self.feedback_manager = Feedback(self.signals, editor)
+        self.mark_reseter = Reseter(self.signals, editor)
+        self.mark_updater = Updater(self.signals, editor)
+        self.marker = Marker(self.signals, editor)
         
-        signals.sender.gui = self.gui
-        self.gui_manager = GuiManager(signals.sender, editor)
+        self.signals.sender.gui = self.gui
+        self.gui_manager = GuiManager(self.signals.sender, editor)
         
         weak_connect(editor, "loaded-file", self, 'restore_bookmarks', idle_priority=9999)
         idle_add(self.restore_bookmarks, priority=9999)
@@ -57,17 +60,17 @@ class BookmarkPlugin(Plugin):
         
     @trigger_toggle
     def toggle(self, sender): 
-        signals.toggle.emit()
+        self.signals.toggle.emit()
         return False
 
     @trigger_show
     def show(self, sender): 
-        signals.show.emit()
+        self.signals.show.emit()
         return False
 
     @trigger_remove
     def remove(self, sender): 
-        signals.remove_all.emit()
+        self.signals.remove_all.emit()
         return False
 
     def populate_popup(self, textview, menu):
@@ -75,7 +78,7 @@ class BookmarkPlugin(Plugin):
         self.editor.add_to_popup(PopupMenuItem(self.editor))
         return False
     
-    @signals.scroll_to_line
+    @Signals.scroll_to_line
     def scroll_to_line(self, sender, line):
         iterator = self.editor.textbuffer.get_iter_at_line(line)
         self.editor.response()
@@ -84,7 +87,7 @@ class BookmarkPlugin(Plugin):
         self.editor.response()
         return False 
     
-    @signals.add
+    @Signals.add
     def mark_add(self, sender, line):
         self.editor.response()
         iterator = self.editor.textbuffer.get_iter_at_line(line)
@@ -92,7 +95,7 @@ class BookmarkPlugin(Plugin):
         self.editor.response()
         return False
     
-    @signals.bookmark_lines
+    @Signals.bookmark_lines
     def mark_lines(self, sender, lines):
         [self.mark_add(sender, line) for line in lines]
         return False    
@@ -103,8 +106,8 @@ class BookmarkPlugin(Plugin):
         end = self.editor.forward_to_line_end(start.copy())
         return start, end
 
-    @signals.remove
-    @signals.remove_all
+    @Signals.remove
+    @Signals.remove_all
     def mark_remove(self, sender, line=None):
         start, end = self.mark_region(line)
         self.editor.response()
@@ -112,12 +115,12 @@ class BookmarkPlugin(Plugin):
         self.editor.response()
         return False
     
-    @signals.lines
+    @Signals.lines
     def margin_toggle(self, sender, lines):
         self.editor.textview.set_show_line_marks(bool(lines))
         return False
     
-    @signals.lines
+    @Signals.lines
     def save_bookmarks(self, sender, lines):
         uri = self.editor.uri
         if not uri: return False
@@ -133,10 +136,10 @@ class BookmarkPlugin(Plugin):
         lines = get_value(str(uri))
         self.editor.response()
         if not lines: return False
-        signals.bookmark_lines.emit(lines)
+        self.signals.bookmark_lines.emit(lines)
         return False
     
     def unload(self):
         super(BookmarkPlugin, self).unload()
         self.mark_updater.update()
-        signals.destroy.emit()
+        self.signals.destroy.emit()

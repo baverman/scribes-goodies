@@ -1,54 +1,52 @@
 from gettext import gettext as _
-from scribes_helpers import connect_signals 
 
-from signals import signals
+from .signals import Signals
 
 MESSAGE = _("Bookmarked lines")
 
 class Feedback(object):
-    def __init__(self,  editor):
+    def __init__(self, signals, editor):
         self.feedback = None
         self.editor = editor
-        
-        connect_signals(self)
+        signals.connect_signals(self)
 
-    @signals.add(after=True)
+    @Signals.add(after=True)
     def add(self, sender, line):
         if not self.feedback: return False
         message = _("Marked line %d") % (line + 1)
         self.editor.update_message(message, "yes")
         return False
 
-    @signals.remove(after=True)
+    @Signals.remove(after=True)
     def remove(self, sender, line):
         if not self.feedback: return False
         message = _("Unmarked line %d") % (line + 1)
         self.editor.update_message(message, "yes")
         return False
 
-    @signals.remove_all
+    @Signals.remove_all
     def remove_all(self, sender):
         if not self.feedback: return False
         message = _("Removed all bookmarks")
         self.editor.update_message(message, "yes")
         return False
 
-    @signals.feedback
+    @Signals.feedback
     def feedback(self, sender, feedback):
         self.feedback = feedback
         return False
 
-    @signals.show
+    @Signals.show
     def show(self, *args):
         self.editor.set_message(MESSAGE)
         return False
 
-    @signals.hide
+    @Signals.hide
     def hide(self, *args):
         self.editor.unset_message(MESSAGE)
         return False
 
-    @signals.scroll_to_line
+    @Signals.scroll_to_line
     def scroll_to_line(self, manager, line):
         message = _("Cursor on line %d") % (line + 1)
         self.editor.update_message(message, "yes")
