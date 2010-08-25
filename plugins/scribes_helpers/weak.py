@@ -2,6 +2,17 @@ import weakref
 from gobject import idle_add
 
 class WeakCallback (object):
+    """
+    Weak callback functor which disconnects on real callback deletion
+    
+    Magic goes here. It allows to skip accurate manual object disposion by brokening
+    cyclic reference beetween sender and callback. Let python gc to work.
+    
+    Also it can wrap callback in idle_add with specified priority.
+    
+    Important note! Object and its callback attribute are passed separately.
+    Because bounded methods are too weak.
+    """
     def __init__(self, obj, attr, idle, idle_priority):
         self.wref = weakref.ref(obj)
         self.callback_attr = attr
@@ -13,6 +24,7 @@ class WeakCallback (object):
     def __call__(self, *args, **kwargs):
         obj = self.wref()
         if obj:
+            # object still alive so calling method 
             attr = getattr(obj, self.callback_attr)
             
             if self.idle:
@@ -35,6 +47,9 @@ class WeakCallback (object):
 
 
 def weak_connect(sender, signal, connector, attr, idle=True, after=False, idle_priority=None):
+    """
+    Function to connect some GObject with weak callback
+    """
     if idle_priority:
         idle = True
     

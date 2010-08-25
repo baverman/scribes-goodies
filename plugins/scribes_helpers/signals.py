@@ -5,37 +5,110 @@ from SCRIBES.SIGNALS import GObject, TYPE_NONE, TYPE_PYOBJECT, SSIGNAL
 from .weak import weak_connect
 
 def append_attr(obj, attr, value):
+    """
+    Appends value to object attribute
+    
+    Attribute may be undefined
+    
+    For example:
+        append_attr(obj, 'test', 1)
+        append_attr(obj, 'test', 2)
+        
+        assert obj.test == [1, 2]
+    """
     try:
         getattr(obj, attr).append(value)
     except AttributeError:
         setattr(obj, attr, [value])
         
 
+def attach_signal_connect_info(attr, obj, func, after, idle, idle_priority):
+    """
+    Adds signal connection info to function
+    
+    Used by signal and trigger decorators
+    """
+    connect_params = dict(after=after, idle=idle, idle_priority=idle_priority)
+
+    if func:
+        if not getattr(func, '__call__'):
+            raise Exception('Signal decorator accept callable or connect params')
+        
+        append_attr(func, attr, (obj, connect_params))
+        return func
+    else:
+        def inner(func):
+            append_attr(func, attr, (obj, connect_params))
+            return func
+        
+        return inner    
+    
+
 class Signal(object):
+    """
+    Unbounded signal
+    
+    Class only holds signal parameters which used to instantiate correct GObject
+    """
+    
     def __init__(self, arg_count=0):
+        """
+        @param arg_count: Signal argument count. Default is zero.  
+        """
         self.signal_type = SSIGNAL
         self.return_type = TYPE_NONE
         self.arg_types = tuple(TYPE_PYOBJECT for r in range(arg_count))
         self.name = None
 
     def __call__(self, func=None, after=False, idle=True, idle_priority=None):
-        connect_params = dict(after=after, idle=idle, idle_priority=idle_priority)
-
-        if func:
-            if not getattr(func, '__call__'):
-                raise Exception('Signal decorator accept callable or connect params')
+        """
+        Decorator to mark class methods as callbacks to this signal
+        
+        Usage:
+            @signal
+            def callback(...): pass # Connects signal with idle wrapper
             
-            append_attr(func, 'signals_to_connect', (self, connect_params))
-            return func
-        else:
-            def inner(func):
-                append_attr(func, 'signals_to_connect', (self, connect_params))
-                return func
+            @signal(idle=False)
+            def callback(...): pass # Usual (in gobject terms) signal connection
             
-            return inner    
+            @signal(after=True)
+            def callback(...): pass # sender.connect_after(callback) analog
+            
+            @signal(idle_priority=9999)
+            def callback(...): pass # idle wrapper will start callback with specified priority
+            
+        And you may combine connect parameters of course
+        """
+        return attach_signal_connect_info('signals_to_connect',
+            self, func, after, idle, idle_priority)
 
 
 class SignalManager(object):
+    """
+    Wrapper for inner GObject with signals
+    
+    Example:
+        class Manager(SignalManager):
+            show = Signal()
+            hide = Signal()
+        
+    Manager.show and Manager.hide is unbounded signals and can be used as
+    decorators to callbacks. Whereas instance.show and instance.hide is bounded and
+    can be used to emit signals. 
+    
+        class Plugin(object):
+            def __init__(self):
+                self.signals = Manager()
+                self.signals.connect_signals()
+                
+                self.signals.hide.emit() 
+                
+            @Manager.show
+            def show(self, sender):
+                pass
+                
+    Inner GObject with necessary __gsignals__ is constructed during instance initialization
+    """
     def __init__(self):    
         signals = {}
         for sname, signal in self.__class__.__dict__.iteritems():
@@ -55,16 +128,27 @@ class SignalManager(object):
             raise Exception('Empty signal manager')
             
     def connect_signals(self, obj):
+        """
+        Connects marked object methods
+        """
         for attr, value in obj.__class__.__dict__.iteritems():
             for signal, connect_params in getattr(value, 'signals_to_connect', ()):
                 self.connect(signal, obj, attr, **connect_params)    
 
     def connect(self, signal, obj, attr, after, idle, idle_priority):
+        """
+        Connects unbounded signal
+        """
         weak_connect(self.sender, signal.name, obj, attr,
             after=after, idle=idle, idle_priority=idle_priority)
 
 
 class BoundedSignal(object):
+    """
+    This class knows about its GObject wrapper and unbounded signal name
+    
+    This allows it to emit signals 
+    """
     def __init__(self, manager, signal):
         self.manager = manager
         self.signal = signal
@@ -78,25 +162,18 @@ class BoundedSignal(object):
 
     
 class Trigger(object):
+    """
+    Trigger (special signal emited by keyboard shortcut)
+    
+    Can be used as decorator to mark methods for feature connecting. 
+    """
     def __init__(self, *args):
         self.args = args
         self.trigger = None
         
     def __call__(self, func=None, after=False, idle=True, idle_priority=None):
-        connect_params = dict(after=after, idle=idle, idle_priority=idle_priority)
-
-        if func:
-            if not getattr(func, '__call__'):
-                raise Exception('Trigger decorator accept callable or connect params')
-            
-            append_attr(func, 'triggers_to_connect', (self, connect_params))
-            return func
-        else:
-            def inner(func):
-                append_attr(func, 'triggers_to_connect', (self, connect_params))
-                return func
-            
-            return inner    
+        return attach_signal_connect_info('triggers_to_connect',
+            self, func, after, idle, idle_priority)
     
     def connect(self, trigger_manager, obj, attr, after, idle, idle_priority):
         if not self.trigger: 
@@ -107,6 +184,9 @@ class Trigger(object):
 
         
 def connect_triggers(obj, manager):
+    """
+    Creates triggers and connects it to marked object methods     
+    """
     for k, v in obj.__class__.__dict__.iteritems():
         for trigger, connect_params in getattr(v, 'triggers_to_connect', ()):
             trigger.connect(manager, obj, k, **connect_params)
