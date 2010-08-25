@@ -1,4 +1,4 @@
-from scribes_helpers import Plugin, Signal, SignalManager, Trigger
+from scribes_helpers import Signal, SignalManager, Trigger, TriggerManager
 from gettext import gettext as _
 
 name = "Bar Plugin"
@@ -19,11 +19,17 @@ trigger = Trigger("activate-bar-power", "<ctrl><alt>f",
     _("Activate the holy power of bar"), _("Example"))
 
 
-class BarPlugin(Plugin):
+class BarPlugin(object):
     def __init__(self, editor):
-        super(BarPlugin, self).__init__(editor)
+        self.editor = editor
         self.signals = Signals()
         self.signals.connect_signals(self)
+        
+        self.triggers = TriggerManager(editor)
+        self.triggers.connect_triggers(self)
+    
+    def load(self): pass
+    def unload(self): pass
         
     @trigger
     def activate(self, sender):

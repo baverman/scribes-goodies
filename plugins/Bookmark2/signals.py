@@ -1,7 +1,6 @@
 from scribes_helpers import SignalManager, Signal
 
 class Signals(SignalManager):
-    destroy        = Signal()
     toggle         = Signal()
     remove_all     = Signal(1)
     show           = Signal()

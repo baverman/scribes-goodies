@@ -1,4 +1,4 @@
-from scribes_helpers import Plugin, Signal, SignalManager, Trigger
+from scribes_helpers import Trigger, TriggerManager
 import subprocess
 from gettext import gettext as _
 
@@ -15,9 +15,16 @@ trigger = Trigger("open-file-directory", "<ctrl><alt>l",
     _("Opens file directory in file manager"), _("File Operations"))
 
 
-class GotoDirPlugin(Plugin):
+class GotoDirPlugin(object):
+    def __init__(self, editor):
+        self.editor = editor
+        self.triggers = TriggerManager(editor)
+        self.triggers.connect_triggers(self)
     
     @trigger
     def activate(self, sender):
         subprocess.Popen(['/usr/bin/env', 'thunar', self.editor.pwd_uri]).poll()
         return False
+    
+    def load(self): pass
+    def unload(self): pass

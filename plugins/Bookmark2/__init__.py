@@ -1,7 +1,7 @@
 from gettext import gettext as _
 from gobject import idle_add
 
-from scribes_helpers import Plugin, Trigger, weak_connect
+from scribes_helpers import Trigger, weak_connect, TriggerManager
 
 from .signals import Signals
 from .Utils import create_bookmark_image, BOOKMARK_NAME
@@ -25,12 +25,15 @@ trigger_remove = Trigger("remove-all-bookmarks", "<ctrl><alt>b",
     _("Remove all bookmarks"), _("Bookmark Operations"))
 
 
-class BookmarkPlugin(Plugin):
+class BookmarkPlugin(object):
     def __init__(self, editor):
-        super(BookmarkPlugin, self).__init__(editor)
+        self.editor = editor
         
         self.signals = Signals()
         self.signals.connect_signals(self)
+        
+        self.triggers = TriggerManager(editor)
+        self.triggers.connect_triggers(self)
         
         # WTF? in original plugin there is no popup menu item, so commented
         #editor.textview.connect("populate-popup", self.pupulate_popup)
@@ -133,6 +136,4 @@ class BookmarkPlugin(Plugin):
         return False
     
     def unload(self):
-        super(BookmarkPlugin, self).unload()
         self.mark_updater.update()
-        self.signals.destroy.emit()

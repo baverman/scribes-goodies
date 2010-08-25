@@ -1,24 +1,19 @@
 import sys
 
-from SCRIBES.TriggerManager import TriggerManager
+from SCRIBES.TriggerManager import TriggerManager as CoreTriggerManager
 
 from .weak import weak_connect
 from .signals import Signal, Trigger, SignalManager, connect_triggers
 
-class Plugin(object):
+class TriggerManager(object):
     def __init__(self, editor):
-        editor.response()
-        self.editor = editor
-        self.triggers = TriggerManager(editor)
-        editor.response()
-        
-        connect_triggers(self, self.triggers)
-    
-    def load(self):
-        pass
+        self.triggers = CoreTriggerManager(editor)
 
-    def unload(self):
+    def __del__(self):    
         self.triggers.remove_triggers()
+        
+    def connect_triggers(self, obj):
+        connect_triggers(obj, self.triggers)        
 
 
 def bootstrap(plugin_class_name):
@@ -38,9 +33,7 @@ def bootstrap(plugin_class_name):
     '''
     class Bootstrap(object):
         def __init__(self, editor):
-            editor.response()
             self.editor = editor
-            editor.response()
             self.plugin = None
             
         def load(self):
@@ -53,10 +46,14 @@ def bootstrap(plugin_class_name):
             cls = getattr(module, class_name)
             
             self.plugin = cls(self.editor)
-            self.plugin.load()
+            
+            if getattr(self.plugin, 'load', False):
+                self.plugin.load()
             
         def unload(self):
-            self.plugin.unload()
+            if getattr(self.plugin, 'unload', False):
+                self.plugin.unload()
+            
             self.plugin = None
 
     return Bootstrap
