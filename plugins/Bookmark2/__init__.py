@@ -1,4 +1,3 @@
-import os.path
 from gettext import gettext as _
 from gobject import idle_add
 
@@ -11,7 +10,7 @@ from .Feedback import Feedback
 from .MarkReseter import Reseter
 from .MarkUpdater import Updater
 from .Marker import Marker
-from .GUI.Manager import Manager as GuiManager
+from .GUI import Manager as GuiManager
 
 from .Metadata import set_value, get_value
 
@@ -43,21 +42,11 @@ class BookmarkPlugin(Plugin):
         self.mark_updater = Updater(self.signals, editor)
         self.marker = Marker(self.signals, editor)
         
-        self.signals.sender.gui = self.gui
-        self.gui_manager = GuiManager(self.signals.sender, editor)
+        self.gui_manager = GuiManager(self.signals, editor)
         
         weak_connect(editor, "loaded-file", self, 'restore_bookmarks', idle_priority=9999)
         idle_add(self.restore_bookmarks, priority=9999)
-
-    @property
-    def gui(self):
-        try:
-            return self.__gui
-        except AttributeError:
-            self.__gui = self.editor.get_gui_object(globals(), os.path.join("GUI", "GUI.glade"))
-            
-        return self.__gui
-        
+   
     @trigger_toggle
     def toggle(self, sender): 
         self.signals.toggle.emit()
