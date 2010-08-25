@@ -1,6 +1,7 @@
 import gobject
 
 from SCRIBES.SIGNALS import GObject, TYPE_NONE, TYPE_PYOBJECT, SSIGNAL
+from SCRIBES.TriggerManager import TriggerManager as CoreTriggerManager
 
 from .weak import weak_connect
 
@@ -138,6 +139,8 @@ class SignalManager(object):
     def connect(self, signal, obj, attr, after, idle, idle_priority):
         """
         Connects unbounded signal
+        
+        @param signal: Unbounded signal
         """
         weak_connect(self.sender, signal.name, obj, attr,
             after=after, idle=idle, idle_priority=idle_priority)
@@ -163,30 +166,53 @@ class BoundedSignal(object):
     
 class Trigger(object):
     """
-    Trigger (special signal emited by keyboard shortcut)
+    Unbounded trigger (special signal emited by keyboard shortcut)
     
     Can be used as decorator to mark methods for feature connecting. 
     """
-    def __init__(self, *args):
-        self.args = args
-        self.trigger = None
+    def __init__(self, name, accelerator="", description="", category="",
+            error=True, removable=True):
+        self.name = name
+        self.accelerator = accelerator 
+        self.description = description
+        self.category = category
+        self.error = error
+        self.removable = removable
         
     def __call__(self, func=None, after=False, idle=True, idle_priority=None):
         return attach_signal_connect_info('triggers_to_connect',
             self, func, after, idle, idle_priority)
-    
-    def connect(self, trigger_manager, obj, attr, after, idle, idle_priority):
-        if not self.trigger: 
-            self.trigger = trigger_manager.create_trigger(*self.args)
-    
-        weak_connect(self.trigger, 'activate', obj, attr,
-            after=after, idle=idle, idle_priority=idle_priority)
+            
+    def create(self, manager):
+        return manager.create_trigger(self.name, self.accelerator, self.description,
+            self.category, self.error, self.removable)
 
+
+class TriggerManager(object):
+    '''
+    Auto disconnected trigger manager
+    
+    Wraps SCRIBES.TriggerManager and calls remove_triggers on object deletion 
+    '''
+    def __init__(self, editor):
+        self.manager = CoreTriggerManager(editor)
+        self.triggers = {}
+
+    def __del__(self):
+        self.triggers.clear()
+        self.manager.remove_triggers()
+    
+    def connect_triggers(self, obj):
+        '''
+        Connects object methods marked by trigger decorator  
+        '''
+        for attr, value in obj.__class__.__dict__.iteritems():
+            for trigger, connect_params in getattr(value, 'triggers_to_connect', ()):
+                self.connect(trigger, obj, attr, **connect_params)
         
-def connect_triggers(obj, manager):
-    """
-    Creates triggers and connects it to marked object methods     
-    """
-    for k, v in obj.__class__.__dict__.iteritems():
-        for trigger, connect_params in getattr(v, 'triggers_to_connect', ()):
-            trigger.connect(manager, obj, k, **connect_params)
+    def connect(self, trigger, obj, attr, after, idle, idle_priority):
+        if trigger.name not in self.triggers:
+            self.triggers[trigger.name] = trigger.create(self.manager)
+    
+        weak_connect(self.triggers[trigger.name], 'activate', obj, attr,
+            after=after, idle=idle, idle_priority=idle_priority)

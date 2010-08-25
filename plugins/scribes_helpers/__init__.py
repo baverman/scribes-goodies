@@ -1,28 +1,7 @@
 import sys
 
-from SCRIBES.TriggerManager import TriggerManager as CoreTriggerManager
-
 from .weak import weak_connect
-from .signals import Signal, Trigger, SignalManager, connect_triggers
-
-class TriggerManager(object):
-    '''
-    Auto disconnected trigger manager
-    
-    Wraps SCRIBES.TriggerManager and calls remove_triggers on object deletion 
-    '''
-    def __init__(self, editor):
-        self.triggers = CoreTriggerManager(editor)
-
-    def __del__(self):    
-        self.triggers.remove_triggers()
-    
-    def connect_triggers(self, obj):
-        '''
-        Connects object methods with trigger decorator  
-        '''
-        connect_triggers(obj, self.triggers)        
-
+from .signals import Signal, Trigger, TriggerManager, SignalManager
 
 def bootstrap(plugin_class_name):
     '''
