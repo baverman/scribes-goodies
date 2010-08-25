@@ -1,1 +1,3 @@
 .scribes_project
+*.pyc
+*.pyo

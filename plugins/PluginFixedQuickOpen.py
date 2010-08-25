@@ -13,7 +13,6 @@ long_description = "Patches original QuickOpen for emmiting only start directory
 
 import quick_open_settings as settings
 
-
 class FixedQuickOpenPlugin(object):
 
     def __init__(self, editor):
