@@ -20,16 +20,10 @@ class Reseter(object):
 	def reset_buffer(self, editor, operation):
 		if operation == "begin":
 			self.update = False
-			self.signals.feedback.emit(False)
 		else:
 			self.signals.remove_all.emit()
 			self.signals.bookmark_lines.emit(self.lines)
 			self.update = True
-			timeout_add(250, self.enable_feedback, priority=9999)
-		return False
-
-	def enable_feedback(self):
-		self.signals.feedback.emit(True)
 		return False
 
 	@Signals.lines

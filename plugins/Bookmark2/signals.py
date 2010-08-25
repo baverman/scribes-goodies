@@ -10,7 +10,6 @@ class Signals(SignalManager):
     remove         = Signal(2)
     lines          = Signal(1)
     bookmark_lines = Signal(1)
-    feedback       = Signal(1)
     model_data     = Signal(1)
     scroll_to_line = Signal(1)
     updated_model  = Signal()
