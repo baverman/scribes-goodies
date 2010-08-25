@@ -59,7 +59,7 @@ class BookmarkPlugin(Plugin):
 
     @trigger_remove
     def remove(self, sender): 
-        self.signals.remove_all.emit()
+        self.signals.remove_all.emit(True)
         return False
 
     def populate_popup(self, textview, menu):
@@ -77,7 +77,7 @@ class BookmarkPlugin(Plugin):
         return False 
     
     @Signals.add
-    def mark_add(self, sender, line):
+    def mark_add(self, sender, line, feedback=None):
         self.editor.response()
         iterator = self.editor.textbuffer.get_iter_at_line(line)
         self.editor.textbuffer.create_source_mark(None, BOOKMARK_NAME, iterator)
@@ -96,12 +96,16 @@ class BookmarkPlugin(Plugin):
         return start, end
 
     @Signals.remove
-    @Signals.remove_all
-    def mark_remove(self, sender, line=None):
+    def mark_remove(self, sender, line=None, feedback=None):
         start, end = self.mark_region(line)
         self.editor.response()
         self.editor.textbuffer.remove_source_marks(start, end, BOOKMARK_NAME)
         self.editor.response()
+        return False
+    
+    @Signals.remove_all
+    def mark_remove_all(self, sender, feedback=None):
+        self.mark_remove(sender)
         return False
     
     @Signals.lines

@@ -14,9 +14,9 @@ class Marker(object):
         line = self.editor.cursor.get_line()
         
         if line in self.lines:
-            self.signals.remove.emit(line)
+            self.signals.remove.emit(line, True)
         else:
-            self.signals.add.emit(line)
+            self.signals.add.emit(line, True)
             
         return False
 
