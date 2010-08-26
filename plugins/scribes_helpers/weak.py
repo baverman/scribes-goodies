@@ -1,7 +1,7 @@
 import weakref
 from gobject import idle_add
 
-class WeakCallback (object):
+class WeakCallback(object):
     """
     Weak callback functor which disconnects on real callback deletion
     
@@ -59,5 +59,7 @@ def weak_connect(sender, signal, connector, attr, idle=True, after=False, idle_p
         wc.gobject_token = sender.connect_after(signal, wc)
     else:
         wc.gobject_token = sender.connect(signal, wc)
-        
+
     #print "Connected", sender, signal, connector, attr, idle, after, idle_priority
+
+    return wc.gobject_token

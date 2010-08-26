@@ -1,4 +1,5 @@
 import gobject
+import weakref
 
 from SCRIBES.SIGNALS import GObject, TYPE_NONE, TYPE_PYOBJECT, SSIGNAL
 from SCRIBES.TriggerManager import TriggerManager as CoreTriggerManager
@@ -112,6 +113,7 @@ class SignalManager(object):
     """
     def __init__(self):    
         signals = {}
+        self.handlers = []
         for sname, signal in self.__class__.__dict__.iteritems():
             if isinstance(signal, Signal):
                 signal.name = sname.replace('_', '-')
@@ -134,7 +136,7 @@ class SignalManager(object):
         """
         for attr, value in obj.__class__.__dict__.iteritems():
             for signal, connect_params in getattr(value, 'signals_to_connect', ()):
-                self.connect(signal, obj, attr, **connect_params)    
+                self.handlers.append(self.connect(signal, obj, attr, **connect_params))    
 
     def connect(self, signal, obj, attr, after, idle, idle_priority):
         """
@@ -142,7 +144,7 @@ class SignalManager(object):
         
         @param signal: Unbounded signal
         """
-        weak_connect(self.sender, signal.name, obj, attr,
+        return weak_connect(self.sender, signal.name, obj, attr,
             after=after, idle=idle, idle_priority=idle_priority)
 
 
@@ -150,18 +152,23 @@ class BoundedSignal(object):
     """
     This class knows about its GObject wrapper and unbounded signal name
     
-    This allows it to emit signals 
+    This allows it to emit signals. Bounded signal weakly connected to its manager so
+    you can safely use it in any context 
     """
     def __init__(self, manager, signal):
-        self.manager = manager
+        self.manager = weakref.ref(manager)
         self.signal = signal
 
     def connect(self, obj, attr, after, idle, idle_priority):
-        self.manager.connect(self.signal, obj, attr,
+        manager = self.manager()
+        if manager: 
+            manager.connect(self.signal, obj, attr,
             after=after, idle=idle, idle_priority=idle_priority)
 
     def emit(self, *args):
-        self.manager.sender.emit(self.signal.name, *args)
+        manager = self.manager()
+        if manager: 
+            manager.sender.emit(self.signal.name, *args)
 
     
 class Trigger(object):
