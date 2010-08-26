@@ -21,7 +21,7 @@ class Reseter(object):
 		if operation == "begin":
 			self.update = False
 		else:
-			self.signals.remove_all.emit()
+			self.signals.remove_all.emit(False)
 			self.signals.bookmark_lines.emit(self.lines)
 			self.update = True
 		return False
