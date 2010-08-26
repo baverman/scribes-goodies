@@ -7,6 +7,8 @@ from gio import File
 
 from scribes_helpers import Trigger, TriggerManager
 
+from gui import GUI
+
 trigger_complete = Trigger('activate-rope-assist', '<ctrl>space',
     'Auto complete python code', 'Python')
 
@@ -53,6 +55,14 @@ class Plugin(object):
                 
             return self.__project
 
+    @property
+    def gui(self):
+        try:
+            return self.__gui
+        except AttributeError:
+            self.__gui = GUI(self.editor)
+            return self.__gui 
+
     def unload(self):
         if getattr(self, '__project', None):
             self.__project.close()
@@ -77,8 +87,24 @@ class Plugin(object):
                 
         source, offset = self.get_source_and_offset()
         
-        proposals = codeassist.code_assist(project, source, offset) 
-        print [r.name for r in proposals]
+        proposals = codeassist.sorted_proposals(
+            codeassist.code_assist(project, source, offset))
+        
+        def on_select(proposal):
+            edit = self.editor.textbuffer
+            start_offset = codeassist.starting_offset(source, offset)
+
+            start = edit.get_iter_at_offset(start_offset)
+            end = self.editor.cursor
+
+            edit.delete(start, end)
+            edit.insert(start, proposal)
+        
+        if len(proposals) > 1:
+            self.gui.fill([r.name for r in proposals])
+            self.gui.show(on_select)
+        elif len(proposals) == 1:
+            on_select(proposals[0].name)
         
         return False
 
