@@ -28,26 +28,46 @@ def refresh_gui():
     while gtk.events_pending():
         gtk.main_iteration_do(block=False)
 
+def find_project_root(uri):
+    f = File(uri)
+    special_names = ('.ropeproject', '.git', '.hg', '.bzr', '.scribes_project')
+    while True:
+        for name in special_names:
+            if f.get_child(name).query_exists():
+                return f.get_path()
+        
+        p = f.get_parent()
+        if p:
+            f = p
+        else:
+            return None
+
+
 class PythonRopePlugin(object):
 
     def __init__(self, editor):
         self.editor = editor
         self.triggers = TriggerManager(editor)
         self.triggers.connect_triggers(self)
-        self.__project = None
 
     @property
     def project(self):
-        if not self.__project:
-            self.__project = rope.base.project.Project('/home/bobrov/work/scribes-goodies')
-            
-        return self.__project
+        try:
+            return self.__project
+        except AttributeError:
+            root = find_project_root(self.editor.pwd_uri)
+            if root:
+                self.__project = rope.base.project.Project(root)
+            else:
+                self.__project = None
+                
+            return self.__project
 
     def load(self):
         pass
 
     def unload(self):
-        if self.__project:
+        if getattr(self, '__project', None):
             self.__project.close()
     
     def get_source_and_offset(self):
@@ -62,6 +82,10 @@ class PythonRopePlugin(object):
     @trigger_complete(idle=False)
     def autocomplete(self, *args):
         project = self.project 
+        if not project:
+            self.editor.update_message(_("Can't find project path"), "no", 1)
+            return False
+            
         project.validate()
                 
         source, offset = self.get_source_and_offset()
@@ -80,7 +104,13 @@ class PythonRopePlugin(object):
     
     @trigger_goto_defenition(idle=False)
     def goto_definition(self, *args):
-        project = self.project 
+        project = self.project
+        if not project:
+            project = getattr(self.editor, 'ropeproject', None)
+            if not project:
+                self.editor.update_message(_("Can't find project path"), "no", 1)
+                return False
+         
         project.validate()
 
         try:
@@ -95,6 +125,7 @@ class PythonRopePlugin(object):
             self.editor.open_file(uri)
             for editor in self.editor.imanager.get_editor_instances():
                 if editor.uri == uri: 
+                    editor.ropeproject = project 
                     self.goto_line(editor, line)
         else:
             if line:
