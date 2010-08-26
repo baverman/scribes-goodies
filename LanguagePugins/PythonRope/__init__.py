@@ -74,6 +74,9 @@ class Plugin(object):
         offset = cursor.get_offset()
         source = edit.get_text(*edit.get_bounds())
         
+        if not isinstance(source, unicode):
+            source = source.decode('utf8')
+        
         return source, offset
         
     @trigger_complete(idle=False)
@@ -87,8 +90,14 @@ class Plugin(object):
                 
         source, offset = self.get_source_and_offset()
         
-        proposals = codeassist.sorted_proposals(
-            codeassist.code_assist(project, source, offset))
+        try:
+            proposals = codeassist.sorted_proposals(
+                codeassist.code_assist(project, source, offset))
+        except Exception, e:
+            self.editor.update_message(str(e), "no", 1)
+            print e
+            return False
+            
         
         def on_select(proposal):
             edit = self.editor.textbuffer
@@ -130,6 +139,7 @@ class Plugin(object):
             resource, line = codeassist.get_definition_location(
                 project, *self.get_source_and_offset())
         except Exception, e:
+            self.editor.update_message(str(e), "no", 1)
             print e
             return False
             
