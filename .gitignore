@@ -2,3 +2,6 @@
 .ropeproject
 *.pyc
 *.pyo
+*.egg-info
+dist/
+build/
