@@ -14,7 +14,9 @@ setup(
     author_email = 'bobrov@vl.ru',
     package_dir  = {'':'src'},    
     packages     = ['scribes_helpers'],
+    description = 'Wrappers for easy scribes plugins development',
     long_description = open('README.txt').read(),
     zip_safe   = False,
-    test_suite = '__main__.run_tests'
+    test_suite = '__main__.run_tests',
+    url = 'http://github.com/baverman/scribes-goodies',
 )
