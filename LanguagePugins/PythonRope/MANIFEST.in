@@ -1,0 +1,2 @@
+include PythonRopeScribesPlugin/gui.glade
+include PluginPythonRope.py

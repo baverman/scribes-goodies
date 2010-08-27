@@ -10,4 +10,4 @@ to autocomlete python code"""
 
 from scribes_helpers import bootstrap
 
-PythonRopePlugin = bootstrap('PythonRope.Plugin')
+PythonRopePlugin = bootstrap('PythonRopeScribesPlugin.Plugin')
