@@ -1,6 +1,8 @@
 import gtk
+import traceback
 import rope.base.project
 from rope.contrib import codeassist
+from rope.base import libutils
 
 from gettext import gettext as _
 from gio import File
@@ -66,7 +68,10 @@ class Plugin(object):
     def unload(self):
         if getattr(self, '__project', None):
             self.__project.close()
-    
+
+    def get_rope_resource(self, project):    
+        return libutils.path_to_resource(project, File(self.editor.uri).get_path())
+        
     def get_source_and_offset(self):
         edit = self.editor.textbuffer
         
@@ -92,10 +97,11 @@ class Plugin(object):
         
         try:
             proposals = codeassist.sorted_proposals(
-                codeassist.code_assist(project, source, offset))
+                codeassist.code_assist(project, source, offset,
+                    resource=self.get_rope_resource(project)))
         except Exception, e:
             self.editor.update_message(str(e), "no", 1)
-            print e
+            traceback.print_exc() 
             return False
             
         
@@ -137,10 +143,11 @@ class Plugin(object):
 
         try:
             resource, line = codeassist.get_definition_location(
-                project, *self.get_source_and_offset())
+                project, *self.get_source_and_offset(),
+                resource=self.get_rope_resource(project))
         except Exception, e:
             self.editor.update_message(str(e), "no", 1)
-            print e
+            traceback.print_exc()
             return False
             
         if resource:
