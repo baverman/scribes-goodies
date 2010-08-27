@@ -23,7 +23,7 @@ class GotoDirPlugin(object):
     
     @trigger
     def activate(self, sender):
-        subprocess.Popen(['/usr/bin/env', 'thunar', self.editor.pwd_uri]).poll()
+        subprocess.Popen(['/usr/bin/env', 'xdg-open', self.editor.pwd_uri]).poll()
         return False
     
     def load(self): pass
