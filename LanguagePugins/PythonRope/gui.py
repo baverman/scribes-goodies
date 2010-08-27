@@ -14,6 +14,8 @@ class GUI(object):
         self.blocked = False
         self.key_press_handler_id = weak_connect(self.editor.textview,
             'key-press-event', self, 'on_key_press_event', idle=False)
+        self.textbuffer_changed_handler_id = weak_connect(self.editor.textbuffer,
+            'changed', self, 'on_textbuffer_changed', idle=False)
         
         self.window = self.gui.get_object('window')
         self.treeview = self.gui.get_object('treeview')
@@ -24,11 +26,13 @@ class GUI(object):
     def block_key_press(self):
         if not self.blocked:
             self.editor.textview.handler_block(self.key_press_handler_id)
+            self.editor.textbuffer.handler_block(self.textbuffer_changed_handler_id)
             self.blocked = True
 
     def unblock_key_press(self):
         if self.blocked:
             self.editor.textview.handler_unblock(self.key_press_handler_id)
+            self.editor.textbuffer.handler_unblock(self.textbuffer_changed_handler_id)
             self.blocked = False
 
     def show(self, on_select):
@@ -78,8 +82,10 @@ class GUI(object):
         
         if self.on_select:
             self.on_select(text)
-        
-        self.hide()
+    
+    def on_textbuffer_changed(self, *args):    
+        self.signals.text_updated.emit()        
+        return False
         
     def on_key_press_event(self, textview, event):
         if event.keyval == Escape:
@@ -97,8 +103,6 @@ class GUI(object):
             self.activate_selection()
             return True
 
-        self.signals.text_updated.emit()        
-                        
         return False
 
     def get_size(self, width, height):

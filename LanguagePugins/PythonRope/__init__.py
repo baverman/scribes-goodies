@@ -95,6 +95,7 @@ class Plugin(object):
     def text_updated(self, *args):
         refresh_gui()
         self.update_proposals(True)
+        return False
     
     def update_proposals(self, update):
         source, offset = self.get_source_and_offset()
@@ -126,8 +127,7 @@ class Plugin(object):
                 self.gui.fill(proposals)
                 self.gui.show(on_select)
         elif len(proposals) == 1:
-            if update:
-                self.gui.hide()
+            self.gui.hide()
             on_select(proposals[0].name)
         else:
             self.editor.update_message(_("No assist"), "no", 1)
