@@ -2,8 +2,10 @@ from scribes_helpers import weak_connect
 from gtk.keysyms import Up, Down, Return, Escape, Left, Right
 from gtk import TEXT_WINDOW_TEXT
 
+
 class GUI(object):
-    def __init__(self, editor):
+    def __init__(self, signals, editor):
+        self.signals = signals
         self.editor = editor
         self.on_select = None
         self.gui = editor.get_gui_object(globals(), 'gui.glade')
@@ -45,10 +47,14 @@ class GUI(object):
         self.model.clear()
         
         for p in proposals:
-            self.model.append((p,))
+            self.model.append((p.name,))
             
         self.treeview.set_model(self.model)
         self.select(self.model[0])
+        
+    def update(self, proposals, on_select):
+        self.fill(proposals)
+        self.on_select = on_select
         
     def select(self, row):
         self.selection.select_iter(row.iter)
@@ -90,7 +96,9 @@ class GUI(object):
         elif event.keyval == Return:
             self.activate_selection()
             return True
-        
+
+        self.signals.text_updated.emit()        
+                        
         return False
 
     def get_size(self, width, height):

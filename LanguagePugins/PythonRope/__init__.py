@@ -7,14 +7,14 @@ from rope.base import libutils
 from gettext import gettext as _
 from gio import File
 
-from scribes_helpers import Trigger, TriggerManager
+from scribes_helpers import Trigger, TriggerManager, Signal, SignalManager
 
 from gui import GUI
 
 trigger_complete = Trigger('activate-rope-assist', '<ctrl>space',
     'Auto complete python code', 'Python')
 
-trigger_goto_defenition = Trigger('goto-python-definition', 'F3',
+trigger_goto_definition = Trigger('goto-python-definition', 'F3',
     'Navigates to definition under cursor', 'Python')
 
 
@@ -37,12 +37,19 @@ def find_project_root(uri):
             return None
 
 
+class Signals(SignalManager):
+    text_updated = Signal()
+
+
 class Plugin(object):
 
     def __init__(self, editor):
         self.editor = editor
         self.triggers = TriggerManager(editor)
         self.triggers.connect_triggers(self)
+        
+        self.signals = Signals()
+        self.signals.connect_signals(self)
 
     @property
     def project(self):
@@ -62,7 +69,7 @@ class Plugin(object):
         try:
             return self.__gui
         except AttributeError:
-            self.__gui = GUI(self.editor)
+            self.__gui = GUI(self.signals, self.editor)
             return self.__gui 
 
     def unload(self):
@@ -83,22 +90,19 @@ class Plugin(object):
             source = source.decode('utf8')
         
         return source, offset
-        
-    @trigger_complete(idle=False)
-    def autocomplete(self, *args):
-        project = self.project 
-        if not project:
-            self.editor.update_message(_("Can't find project path"), "no", 1)
-            return False
-            
-        project.validate()
-                
+    
+    @Signals.text_updated(idle=True)
+    def text_updated(self, *args):
+        refresh_gui()
+        self.update_proposals(True)
+    
+    def update_proposals(self, update):
         source, offset = self.get_source_and_offset()
         
         try:
             proposals = codeassist.sorted_proposals(
-                codeassist.code_assist(project, source, offset,
-                    resource=self.get_rope_resource(project)))
+                codeassist.code_assist(self.project, source, offset,
+                    resource=self.get_rope_resource(self.project)))
         except Exception, e:
             self.editor.update_message(str(e), "no", 1)
             traceback.print_exc() 
@@ -116,10 +120,28 @@ class Plugin(object):
             edit.insert(start, proposal)
         
         if len(proposals) > 1:
-            self.gui.fill([r.name for r in proposals])
-            self.gui.show(on_select)
+            if update:
+                self.gui.update(proposals, on_select)
+            else:
+                self.gui.fill(proposals)
+                self.gui.show(on_select)
         elif len(proposals) == 1:
+            if update:
+                self.gui.hide()
             on_select(proposals[0].name)
+        else:
+            self.editor.update_message(_("No assist"), "no", 1)
+        
+    @trigger_complete(idle=False)
+    def autocomplete(self, *args):
+        project = self.project 
+        if not project:
+            self.editor.update_message(_("Can't find project path"), "no", 1)
+            return False
+
+        project.validate()
+        
+        self.update_proposals(False)
         
         return False
 
@@ -130,7 +152,7 @@ class Plugin(object):
         edit.place_cursor(iterator)
         editor.textview.scroll_to_iter(iterator, 0.001, use_align=True, xalign=1.0)
     
-    @trigger_goto_defenition(idle=False)
+    @trigger_goto_definition(idle=False)
     def goto_definition(self, *args):
         project = self.project
         if not project:
