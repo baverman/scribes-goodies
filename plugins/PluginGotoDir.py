@@ -1,4 +1,4 @@
-from scribes_helpers import Trigger, TriggerManager
+from scribes.helpers import Trigger, TriggerManager
 import subprocess
 from gettext import gettext as _
 

@@ -9,14 +9,14 @@ def run_tests():
 
 setup(
     name     = 'scribes.helpers',
-    version  = '0.2dev',
+    version  = '0.3dev',
     author   = 'Anton Bobrov',
     author_email = 'bobrov@vl.ru',
-    package_dir  = {'':'src'},    
-    packages     = ['scribes_helpers'],
+    packages     = ['scribes'],
     description = 'Wrappers for easy scribes plugins development',
     long_description = open('README.txt').read(),
     zip_safe   = False,
     test_suite = '__main__.run_tests',
     url = 'http://github.com/baverman/scribes-goodies',
+    namespace_packages = ['scribes'],
 )

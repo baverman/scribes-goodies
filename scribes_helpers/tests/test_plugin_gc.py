@@ -1,16 +1,12 @@
 #!/usr/bin/env python
 
-import sys
-import os.path
 import weakref
 import gtk
 import gc
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'plugins'))
-
 import unittest
 
-from scribes_helpers import Signal, SignalManager
+from scribes.helpers import Signal, SignalManager
 
 
 def refresh_gui():
