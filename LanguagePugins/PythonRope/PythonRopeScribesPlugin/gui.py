@@ -13,9 +13,9 @@ class GUI(object):
         
         self.blocked = False
         self.key_press_handler_id = weak_connect(self.editor.textview,
-            'key-press-event', self, 'on_key_press_event', idle=False)
+            'key-press-event', self, 'on_key_press_event')
         self.textbuffer_changed_handler_id = weak_connect(self.editor.textbuffer,
-            'changed', self, 'on_textbuffer_changed', idle=False)
+            'changed', self, 'on_textbuffer_changed')
         
         self.window = self.gui.get_object('window')
         self.treeview = self.gui.get_object('treeview')
