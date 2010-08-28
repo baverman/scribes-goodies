@@ -7,7 +7,7 @@ from rope.base import libutils
 from gettext import gettext as _
 from gio import File
 
-from scribes_helpers import Trigger, TriggerManager, Signal, SignalManager
+from scribes.helpers import Trigger, TriggerManager, Signal, SignalManager
 
 from gui import GUI
 

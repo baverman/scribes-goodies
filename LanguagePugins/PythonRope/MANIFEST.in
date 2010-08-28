@@ -1,2 +1,2 @@
-include PythonRopeScribesPlugin/gui.glade
+recursive-include scribes *.glade
 include PluginPythonRope.py

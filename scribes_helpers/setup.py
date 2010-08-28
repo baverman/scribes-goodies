@@ -12,7 +12,7 @@ setup(
     version  = '0.3dev',
     author   = 'Anton Bobrov',
     author_email = 'bobrov@vl.ru',
-    packages     = ['scribes'],
+    packages     = ['scribes.helpers'],
     description = 'Wrappers for easy scribes plugins development',
     long_description = open('README.txt').read(),
     zip_safe   = False,

@@ -8,6 +8,6 @@ short_description = "Autocompletes python code"
 long_description = """This plugin uses rope refactoring library
 to autocomlete python code"""
 
-from scribes_helpers import bootstrap
+from scribes.helpers import bootstrap
 
-PythonRopePlugin = bootstrap('PythonRopeScribesPlugin.Plugin')
+PythonRopePlugin = bootstrap('scribes.python.rope.Plugin')

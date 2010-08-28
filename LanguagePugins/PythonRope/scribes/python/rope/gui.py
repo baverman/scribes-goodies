@@ -1,4 +1,4 @@
-from scribes_helpers import weak_connect
+from scribes.helpers import weak_connect
 from gtk.keysyms import Up, Down, Return, Escape, Left, Right
 from gtk import TEXT_WINDOW_TEXT
 
