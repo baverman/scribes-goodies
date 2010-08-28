@@ -149,8 +149,7 @@ class SignalManager(object):
         
         @param signal: Unbounded signal
         """
-        return weak_connect(self.sender, signal.name, obj, attr,
-            after=after, idle=idle)
+        return weak_connect(self.sender, signal.name, obj, attr, after=after, idle=idle)
 
 
 class BoundedSignal(object):

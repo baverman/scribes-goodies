@@ -26,12 +26,12 @@ class WeakCallback(object):
             # object still alive so calling method 
             attr = getattr(obj, self.callback_attr)
             
-            if self.idle is True:
-                idle_add(attr, *args, **kwargs)
-            elif isinstance(self.idle, int):                
-                idle_add(attr, priority=self.idle, *args, **kwargs)
-            else:
+            if self.idle is False or self.idle is None:
                 return attr(*args, **kwargs)
+            elif self.idle is True:
+                idle_add(attr, *args, **kwargs)
+            else:
+                idle_add(attr, priority=self.idle, *args, **kwargs)
                     
         elif self.gobject_token:
             sender = args[0]
@@ -55,6 +55,6 @@ def weak_connect(sender, signal, connector, attr, idle=False, after=False):
     else:
         wc.gobject_token = sender.connect(signal, wc)
 
-    #print "Connected", sender, signal, connector, attr, idle, after, idle_priority
+    #print "Connected", sender, signal, connector, attr, idle, after
 
     return wc.gobject_token

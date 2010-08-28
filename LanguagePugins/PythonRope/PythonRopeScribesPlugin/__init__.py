@@ -163,15 +163,20 @@ class Plugin(object):
                 return False
          
         project.validate()
-
+        
+        current_resource = self.get_rope_resource(project) 
+        
         try:
             resource, line = codeassist.get_definition_location(
                 project, *self.get_source_and_offset(),
-                resource=self.get_rope_resource(project))
+                resource=current_resource)
         except Exception, e:
             self.editor.update_message(str(e), "no", 1)
             traceback.print_exc()
             return False
+        
+        if resource.real_path == current_resource.real_path:
+            resource = None
             
         if resource:
             uri = File(resource.real_path).get_uri()
