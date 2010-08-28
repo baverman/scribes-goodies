@@ -111,6 +111,8 @@ class Plugin(object):
             
         
         def on_select(proposal):
+            self.gui.hide()
+
             edit = self.editor.textbuffer
             start_offset = codeassist.starting_offset(source, offset)
 
@@ -127,12 +129,11 @@ class Plugin(object):
                 self.gui.fill(proposals)
                 self.gui.show(on_select)
         elif len(proposals) == 1:
-            self.gui.hide()
             on_select(proposals[0].name)
         else:
             self.editor.update_message(_("No assist"), "no", 1)
         
-    @trigger_complete(idle=False)
+    @trigger_complete
     def autocomplete(self, *args):
         project = self.project 
         if not project:
@@ -152,7 +153,7 @@ class Plugin(object):
         edit.place_cursor(iterator)
         editor.textview.scroll_to_iter(iterator, 0.001, use_align=True, xalign=1.0)
     
-    @trigger_goto_definition(idle=False)
+    @trigger_goto_definition
     def goto_definition(self, *args):
         project = self.project
         if not project:

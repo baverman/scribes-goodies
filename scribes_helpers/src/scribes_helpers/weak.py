@@ -13,13 +13,12 @@ class WeakCallback(object):
     Important note! Object and its callback attribute are passed separately.
     Because bounded methods are too weak.
     """
-    def __init__(self, obj, attr, idle, idle_priority):
+    def __init__(self, obj, attr, idle):
         self.wref = weakref.ref(obj)
         self.callback_attr = attr
         self.gobject_token = None
         self.dbus_token = None
         self.idle = idle
-        self.idle_priority = idle_priority
 
     def __call__(self, *args, **kwargs):
         obj = self.wref()
@@ -27,11 +26,10 @@ class WeakCallback(object):
             # object still alive so calling method 
             attr = getattr(obj, self.callback_attr)
             
-            if self.idle:
-                if self.idle_priority:
-                    idle_add(attr, priority=self.idle_priority, *args, **kwargs)
-                else:
-                    idle_add(attr, *args, **kwargs)
+            if self.idle is True:
+                idle_add(attr, *args, **kwargs)
+            elif isinstance(self.idle, int):                
+                idle_add(attr, priority=self.idle, *args, **kwargs)
             else:
                 return attr(*args, **kwargs)
                     
@@ -46,14 +44,11 @@ class WeakCallback(object):
         return False
 
 
-def weak_connect(sender, signal, connector, attr, idle=True, after=False, idle_priority=None):
+def weak_connect(sender, signal, connector, attr, idle=False, after=False):
     """
     Function to connect some GObject with weak callback
     """
-    if idle_priority:
-        idle = True
-    
-    wc = WeakCallback(connector, attr, idle, idle_priority)
+    wc = WeakCallback(connector, attr, idle)
     
     if after:
         wc.gobject_token = sender.connect_after(signal, wc)

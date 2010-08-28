@@ -24,13 +24,13 @@ def append_attr(obj, attr, value):
         setattr(obj, attr, [value])
         
 
-def attach_signal_connect_info(attr, obj, func, after, idle, idle_priority):
+def attach_signal_connect_info(attr, obj, func, after, idle):
     """
     Adds signal connection info to function
     
     Used by signal and trigger decorators
     """
-    connect_params = dict(after=after, idle=idle, idle_priority=idle_priority)
+    connect_params = dict(after=after, idle=idle)
 
     if func:
         if not getattr(func, '__call__'):
@@ -62,27 +62,32 @@ class Signal(object):
         self.arg_types = tuple(TYPE_PYOBJECT for r in range(arg_count))
         self.name = None
 
-    def __call__(self, func=None, after=False, idle=True, idle_priority=None):
+    def __call__(self, func=None, after=False, idle=False):
         """
         Decorator to mark class methods as callbacks to this signal
         
         Usage:
             @signal
-            def callback(...): pass # Connects signal with idle wrapper
-            
-            @signal(idle=False)
             def callback(...): pass # Usual (in gobject terms) signal connection
+            
+            @signal(idle=True)
+            def callback(...): pass # Connects signal with idle wrapper
             
             @signal(after=True)
             def callback(...): pass # sender.connect_after(callback) analog
             
-            @signal(idle_priority=9999)
+            @signal(idle=9999)
             def callback(...): pass # idle wrapper will start callback with specified priority
             
         And you may combine connect parameters of course
         """
-        return attach_signal_connect_info('signals_to_connect',
-            self, func, after, idle, idle_priority)
+        return attach_signal_connect_info('signals_to_connect', self, func, after, idle)
+            
+    def emit(self):
+        """
+        Only hint for IDE
+        """
+        raise Exception('You cannot emit unbounded signals')
 
 
 class SignalManager(object):
@@ -138,14 +143,14 @@ class SignalManager(object):
             for signal, connect_params in getattr(value, 'signals_to_connect', ()):
                 self.handlers.append(self.connect(signal, obj, attr, **connect_params))    
 
-    def connect(self, signal, obj, attr, after, idle, idle_priority):
+    def connect(self, signal, obj, attr, after, idle):
         """
         Connects unbounded signal
         
         @param signal: Unbounded signal
         """
         return weak_connect(self.sender, signal.name, obj, attr,
-            after=after, idle=idle, idle_priority=idle_priority)
+            after=after, idle=idle)
 
 
 class BoundedSignal(object):
@@ -159,11 +164,10 @@ class BoundedSignal(object):
         self.manager = weakref.ref(manager)
         self.signal = signal
 
-    def connect(self, obj, attr, after, idle, idle_priority):
+    def connect(self, obj, attr, after, idle):
         manager = self.manager()
         if manager: 
-            manager.connect(self.signal, obj, attr,
-            after=after, idle=idle, idle_priority=idle_priority)
+            manager.connect(self.signal, obj, attr, after=after, idle=idle)
 
     def emit(self, *args):
         manager = self.manager()
@@ -186,9 +190,8 @@ class Trigger(object):
         self.error = error
         self.removable = removable
         
-    def __call__(self, func=None, after=False, idle=True, idle_priority=None):
-        return attach_signal_connect_info('triggers_to_connect',
-            self, func, after, idle, idle_priority)
+    def __call__(self, func=None, after=False, idle=False):
+        return attach_signal_connect_info('triggers_to_connect', self, func, after, idle)
             
     def create(self, manager):
         return manager.create_trigger(self.name, self.accelerator, self.description,
@@ -217,9 +220,8 @@ class TriggerManager(object):
             for trigger, connect_params in getattr(value, 'triggers_to_connect', ()):
                 self.connect(trigger, obj, attr, **connect_params)
         
-    def connect(self, trigger, obj, attr, after, idle, idle_priority):
+    def connect(self, trigger, obj, attr, after, idle):
         if trigger.name not in self.triggers:
             self.triggers[trigger.name] = trigger.create(self.manager)
     
-        weak_connect(self.triggers[trigger.name], 'activate', obj, attr,
-            after=after, idle=idle, idle_priority=idle_priority)
+        weak_connect(self.triggers[trigger.name], 'activate', obj, attr, after=after, idle=idle)
