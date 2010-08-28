@@ -46,7 +46,7 @@ class BarPlugin(object):
         self.editor.update_message(message, "yes", 10)
         return False
 
-    @Signals.show_info(idle=False, after=True)
+    @Signals.show_info(idle=True, after=True)
     def show_info(self, sender, title, message):      
         # Show a window containing Bar message.
         self.editor.show_info(title, message, self.editor.window)
