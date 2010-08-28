@@ -1,0 +1,20 @@
+from scribes.helpers import SignalManager, Signal
+
+class Signals(SignalManager):
+    destroy = Signal()
+    inserting_text = Signal()
+    inserted_text = Signal()
+    start_indexing = Signal()
+    finished_indexing = Signal()
+    extracted_text = Signal(1)
+    updated_dictionary = Signal(1)
+    dictionary = Signal(1)
+    match_found = Signal(1)
+    no_match_found = Signal()
+    valid_string = Signal(1)
+    invalid_string = Signal()
+    hide_window = Signal()
+    show_window = Signal()
+    found_indexer_process = Signal()
+    treeview_size = Signal(1)
+    insert_text = Signal(1)
