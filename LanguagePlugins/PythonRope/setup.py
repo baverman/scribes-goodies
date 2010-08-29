@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 import os.path
 
 def get_home():
@@ -13,11 +13,12 @@ setup(
     version  = '0.2dev',
     author   = 'Anton Bobrov',
     author_email = 'bobrov@vl.ru',
-    description = 'Python code autocomplete for scribes editor',
+    description = 'Scribes plugin. Python code autocompleter',
     long_description = open('README.txt').read(),
     zip_safe   = False,
     install_requires = ['scribes.helpers>=0.3dev'],
-    packages = ['scribes.python.rope'],
+    packages = find_packages(),
+    include_package_data = True,
     namespace_packages = ['scribes'],
     data_files = [
         (os.path.join(get_home(), '.gnome2', 'scribes', 'LanguagePlugins'), ['PluginPythonRope.py']),
