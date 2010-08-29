@@ -10,7 +10,7 @@ def get_home():
 
 setup(
     name     = 'scribes.edit.complete_like_eclipse',
-    version  = '0.1dev',
+    version  = '0.2',
     author   = 'Anton Bobrov',
     author_email = 'bobrov@vl.ru',
     description = 'Eclipse like word completition',
