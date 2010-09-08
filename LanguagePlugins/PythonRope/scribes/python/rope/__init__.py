@@ -7,7 +7,7 @@ from rope.base import libutils
 from gettext import gettext as _
 from gio import File
 
-from scribes.helpers import Trigger, TriggerManager, Signal, SignalManager
+from scribes.helpers import Trigger, TriggerManager, Signal, SignalManager, weak_connect
 
 from gui import GUI
 
@@ -17,6 +17,8 @@ trigger_complete = Trigger('activate-rope-assist', '<ctrl>space',
 trigger_goto_definition = Trigger('goto-python-definition', 'F3',
     'Navigates to definition under cursor', 'Python')
 
+trigger_refresh = Trigger('refresh-rope-project', 'F4',
+    'Analyzes all modules in project module', 'Python')
 
 def refresh_gui():
     while gtk.events_pending():
@@ -50,6 +52,8 @@ class Plugin(object):
         
         self.signals = Signals()
         self.signals.connect_signals(self)
+        
+        #weak_connect(self.editor, 'saved-file', self, 'analyze', idle=True)
 
     @property
     def project(self):
@@ -76,8 +80,9 @@ class Plugin(object):
         if getattr(self, '__project', None):
             self.__project.close()
 
-    def get_rope_resource(self, project):    
-        return libutils.path_to_resource(project, File(self.editor.uri).get_path())
+    def get_rope_resource(self, project, uri=None):    
+        uri = uri or self.editor.uri
+        return libutils.path_to_resource(project, File(uri).get_path())
         
     def get_source_and_offset(self):
         edit = self.editor.textbuffer
@@ -140,8 +145,6 @@ class Plugin(object):
             self.editor.update_message(_("Can't find project path"), "no", 1)
             return False
 
-        project.validate()
-        
         self.update_proposals(False)
         
         return False
@@ -161,9 +164,9 @@ class Plugin(object):
             if not project:
                 self.editor.update_message(_("Can't find project path"), "no", 1)
                 return False
-         
-        project.validate()
         
+        project.validate()
+                 
         current_resource = self.get_rope_resource(project) 
         
         try:
@@ -175,7 +178,7 @@ class Plugin(object):
             traceback.print_exc()
             return False
         
-        if resource.real_path == current_resource.real_path:
+        if resource and resource.real_path == current_resource.real_path:
             resource = None
             
         if resource:
@@ -192,3 +195,26 @@ class Plugin(object):
                 self.editor.update_message(_("Unknown definition"), "no", 1)
             
         return False
+
+    def analyze(self, sender, uri, encoding):
+        project = self.project 
+        if not project:
+            self.editor.update_message(_("Can't find project path"), "no", 1)
+            return False
+        
+        resource = self.get_rope_resource(project, uri)
+        
+        project.pycore.analyze_module(resource)
+        
+        self.editor.update_message(_("Module analyze done"), "yes", 1)        
+
+    @trigger_refresh
+    def refresh(self, *args):
+        project = self.project 
+        if not project:
+            self.editor.update_message(_("Can't find project path"), "no", 1)
+            return False
+
+        libutils.analyze_modules(project)
+        
+        return False        

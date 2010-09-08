@@ -6,7 +6,7 @@ import gc
 
 import unittest
 
-from scribes.helpers import Signal, SignalManager
+from gsignals import Signal, SignalManager
 
 
 def refresh_gui():
@@ -54,20 +54,6 @@ class Plugin(object):
         
 class TestCase(unittest.TestCase):
     
-    def test_signal_passing(self):
-        checker = SignalChecker()
-        signals = Signals()
-        
-        plugin = Plugin(signals, checker)
-        
-        signals.test1.emit()
-        signals.test2.emit()
-        
-        refresh_gui()
-        
-        self.assertTrue(checker.fired('test1'))
-        self.assertTrue(checker.fired('test2'))
-        
     def test_plugin_deletion(self):
         checker = SignalChecker()
         
@@ -78,6 +64,9 @@ class TestCase(unittest.TestCase):
         
         plugin_holder = [Plugin(wsignals(), checker)] 
         wplugin = weakref.ref(plugin_holder[0]) # to check plugin deletion
+        
+        test1_handler_id = wplugin().test1.handler.id
+        test2_handler_id = wplugin().test2.handler.id
         
         # There is can be only one ref from holder list
         plugin_references = gc.get_referrers(wplugin())
@@ -96,15 +85,15 @@ class TestCase(unittest.TestCase):
         self.assertEqual(wplugin(), None) # plugin really deleted
         
         # At this point we have Signals GObject connected to plugin callbacks
-        for h in wsignals().handlers:
-            self.assertTrue(wsignals().sender.handler_is_connected(h))
+        self.assertTrue(wsignals().sender.handler_is_connected(test1_handler_id))
+        self.assertTrue(wsignals().sender.handler_is_connected(test2_handler_id))
         
         # But after emmiting signal it is automatically disconnected
         wsignals().test2.emit()
         refresh_gui()
         self.assertFalse(checker.fired('test2'))
-        self.assertTrue(wsender().handler_is_connected(wsignals().handlers[0]))
-        self.assertFalse(wsender().handler_is_connected(wsignals().handlers[1]))
+        self.assertTrue(wsender().handler_is_connected(test1_handler_id))
+        self.assertFalse(wsender().handler_is_connected(test2_handler_id))
         
         # Removing refs to signal manager. Manager and its GObject must vanish 
         signal_holder[:] = []

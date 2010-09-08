@@ -10,7 +10,7 @@ def get_home():
 
 setup(
     name     = 'scribes.python.rope',
-    version  = '0.2dev',
+    version  = '0.2.1',
     author   = 'Anton Bobrov',
     author_email = 'bobrov@vl.ru',
     description = 'Scribes plugin. Python code autocompleter',
