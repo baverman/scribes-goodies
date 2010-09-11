@@ -4,6 +4,9 @@ import unittest
 import gtk
 import gobject
 
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from gsignals import Signal, SignalManager, connect_external, connect_all
 from gsignals.signals import SSIGNAL
 
