@@ -34,6 +34,7 @@ class FixedQuickOpenPlugin(object):
 
             if not root:
                 root = self.find_project_root(editor_uri)
+                print root
                 settings.recent_pathes.append(root)
 
             
@@ -67,8 +68,9 @@ class FixedQuickOpenPlugin(object):
 
     def find_project_root(self, path):
         f = File(path)
+        project_files = ('.git', '.ropeproject', '.bzr', '.hg', '.scribes_project')
         while True:
-            if f.get_child('.scribes_project').query_exists():
+            if any(f.get_child(r).query_exists() for r in project_files):
                 return f.get_uri()
 
             p = f.get_parent()
