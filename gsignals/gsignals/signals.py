@@ -122,7 +122,7 @@ class SignalManager(object):
                 setattr(self, sname, BoundedSignal(self, signal))
         
         if signals:
-            classname = self.__class__.__name__ + 'GObject'
+            classname = self.__class__.__name__ + 'Signals'
             cls = type(classname, (gobject.GObject,), {'__gsignals__':signals})
             gobject.type_register(cls)
             self.sender = cls()

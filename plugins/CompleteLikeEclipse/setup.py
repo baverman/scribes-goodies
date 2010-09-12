@@ -10,12 +10,12 @@ def get_home():
 
 setup(
     name     = 'scribes.edit.complete_like_eclipse',
-    version  = '0.2',
+    version  = '0.2.1',
     author   = 'Anton Bobrov',
     author_email = 'bobrov@vl.ru',
     description = 'Eclipse like word completition',
     zip_safe   = False,
-    install_requires = ['scribes.helpers>=0.3dev'],
+    install_requires = ['scribes.helpers>=0.4'],
     packages = find_packages(),
     namespace_packages = ['scribes'],
     data_files = [

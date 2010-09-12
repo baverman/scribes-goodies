@@ -1,7 +1,7 @@
 import sys
 
-from .weak import weak_connect
-from .signals import Signal, Trigger, TriggerManager, SignalManager
+from gsignals import weak_connect, Signal, SignalManager, connect_external
+from signals import Trigger, TriggerManager, connect_all
 
 def bootstrap(plugin_class_name):
     '''

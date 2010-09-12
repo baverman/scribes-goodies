@@ -1,179 +1,18 @@
-import gobject
-import weakref
+from gsignals import weak_connect, connect_all as gsignals_connect_all
+from gsignals.signals import attach_signal_connect_info
 
-from SCRIBES.SIGNALS import GObject, TYPE_NONE, TYPE_PYOBJECT, SSIGNAL
 from SCRIBES.TriggerManager import TriggerManager as CoreTriggerManager
 
-from .weak import weak_connect
-
-def append_attr(obj, attr, value):
-    """
-    Appends value to object attribute
-    
-    Attribute may be undefined
-    
-    For example:
-        append_attr(obj, 'test', 1)
-        append_attr(obj, 'test', 2)
-        
-        assert obj.test == [1, 2]
-    """
-    try:
-        getattr(obj, attr).append(value)
-    except AttributeError:
-        setattr(obj, attr, [value])
-        
-
-def attach_signal_connect_info(attr, obj, func, after, idle):
-    """
-    Adds signal connection info to function
-    
-    Used by signal and trigger decorators
-    """
-    connect_params = dict(after=after, idle=idle)
-
-    if func:
-        if not getattr(func, '__call__'):
-            raise Exception('Signal decorator accept callable or connect params')
-        
-        append_attr(func, attr, (obj, connect_params))
-        return func
-    else:
-        def inner(func):
-            append_attr(func, attr, (obj, connect_params))
-            return func
-        
-        return inner    
-    
-
-class Signal(object):
-    """
-    Unbounded signal
-    
-    Class only holds signal parameters which used to instantiate correct GObject
-    """
-    
-    def __init__(self, arg_count=0):
-        """
-        @param arg_count: Signal argument count. Default is zero.  
-        """
-        self.signal_type = SSIGNAL
-        self.return_type = TYPE_NONE
-        self.arg_types = tuple(TYPE_PYOBJECT for r in range(arg_count))
-        self.name = None
-
-    def __call__(self, func=None, after=False, idle=False):
-        """
-        Decorator to mark class methods as callbacks to this signal
-        
-        Usage:
-            @signal
-            def callback(...): pass # Usual (in gobject terms) signal connection
-            
-            @signal(idle=True)
-            def callback(...): pass # Connects signal with idle wrapper
-            
-            @signal(after=True)
-            def callback(...): pass # sender.connect_after(callback) analog
-            
-            @signal(idle=9999)
-            def callback(...): pass # idle wrapper will start callback with specified priority
-            
-        And you may combine connect parameters of course
-        """
-        return attach_signal_connect_info('signals_to_connect', self, func, after, idle)
-            
-    def emit(self):
-        """
-        Only hint for IDE
-        """
-        raise Exception('You cannot emit unbounded signals')
-
-
-class SignalManager(object):
-    """
-    Wrapper for inner GObject with signals
-    
-    Example:
-        class Manager(SignalManager):
-            show = Signal()
-            hide = Signal()
-        
-    Manager.show and Manager.hide is unbounded signals and can be used as
-    decorators to callbacks. Whereas instance.show and instance.hide is bounded and
-    can be used to emit signals. 
-    
-        class Plugin(object):
-            def __init__(self):
-                self.signals = Manager()
-                self.signals.connect_signals()
-                
-                self.signals.hide.emit() 
-                
-            @Manager.show
-            def show(self, sender):
-                pass
-                
-    Inner GObject with necessary __gsignals__ is constructed during instance initialization
-    """
-    def __init__(self):    
-        signals = {}
-        self.handlers = []
-        for sname, signal in self.__class__.__dict__.iteritems():
-            if isinstance(signal, Signal):
-                signal.name = sname.replace('_', '-')
-                signals[signal.name] = (signal.signal_type,
-                    signal.return_type, signal.arg_types)
-                
-                setattr(self, sname, BoundedSignal(self, signal))
-        
-        if signals:
-            classname = self.__class__.__name__
-            cls = type(classname, (GObject,), {'__gsignals__':signals})
-            gobject.type_register(cls)
-            self.sender = cls()
+def connect_all(obj, *managers, **external_gobjects):
+    for m in managers:
+        if isinstance(m, TriggerManager):
+            m.connect_triggers(obj)
         else:
-            raise Exception('Empty signal manager')
-            
-    def connect_signals(self, obj):
-        """
-        Connects marked object methods
-        """
-        for attr, value in obj.__class__.__dict__.iteritems():
-            for signal, connect_params in getattr(value, 'signals_to_connect', ()):
-                self.handlers.append(self.connect(signal, obj, attr, **connect_params))    
+            m.connect_signals(obj)
 
-    def connect(self, signal, obj, attr, after, idle):
-        """
-        Connects unbounded signal
-        
-        @param signal: Unbounded signal
-        """
-        return weak_connect(self.sender, signal.name, obj, attr, after=after, idle=idle)
+    gsignals_connect_all(obj, **external_gobjects)
 
 
-class BoundedSignal(object):
-    """
-    This class knows about its GObject wrapper and unbounded signal name
-    
-    This allows it to emit signals. Bounded signal weakly connected to its manager so
-    you can safely use it in any context 
-    """
-    def __init__(self, manager, signal):
-        self.manager = weakref.ref(manager)
-        self.signal = signal
-
-    def connect(self, obj, attr, after, idle):
-        manager = self.manager()
-        if manager: 
-            manager.connect(self.signal, obj, attr, after=after, idle=idle)
-
-    def emit(self, *args):
-        manager = self.manager()
-        if manager: 
-            manager.sender.emit(self.signal.name, *args)
-
-    
 class Trigger(object):
     """
     Unbounded trigger (special signal emited by keyboard shortcut)

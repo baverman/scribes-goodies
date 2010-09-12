@@ -7,7 +7,7 @@ from rope.base import libutils
 from gettext import gettext as _
 from gio import File
 
-from scribes.helpers import Trigger, TriggerManager, Signal, SignalManager, weak_connect
+from scribes.helpers import Trigger, TriggerManager, Signal, SignalManager, connect_all
 
 from gui import GUI
 
@@ -47,13 +47,10 @@ class Plugin(object):
 
     def __init__(self, editor):
         self.editor = editor
+
         self.triggers = TriggerManager(editor)
-        self.triggers.connect_triggers(self)
-        
         self.signals = Signals()
-        self.signals.connect_signals(self)
-        
-        #weak_connect(self.editor, 'saved-file', self, 'analyze', idle=True)
+        connect_all(self, self.signals, self.triggers)
 
     @property
     def project(self):

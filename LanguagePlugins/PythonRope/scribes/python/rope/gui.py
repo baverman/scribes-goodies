@@ -1,4 +1,4 @@
-from scribes.helpers import weak_connect
+from scribes.helpers import connect_external, connect_all
 from gtk.keysyms import Up, Down, Return, Escape, Left, Right
 from gtk import TEXT_WINDOW_TEXT
 
@@ -11,12 +11,8 @@ class GUI(object):
         self.gui = editor.get_gui_object(globals(), 'gui.glade')
         self.gui.connect_signals(self)
         
-        self.blocked = False
-        self.key_press_handler_id = weak_connect(self.editor.textview,
-            'key-press-event', self, 'on_key_press_event')
-        self.textbuffer_changed_handler_id = weak_connect(self.editor.textbuffer,
-            'changed', self, 'on_textbuffer_changed')
-        
+        connect_all(self, textview=self.editor.textview, textbuffer=self.editor.textbuffer) 
+
         self.window = self.gui.get_object('window')
         self.treeview = self.gui.get_object('treeview')
         self.model = self.gui.get_object('liststore')
@@ -24,16 +20,12 @@ class GUI(object):
         self.selection = self.treeview.get_selection()
 
     def block_key_press(self):
-        if not self.blocked:
-            self.editor.textview.handler_block(self.key_press_handler_id)
-            self.editor.textbuffer.handler_block(self.textbuffer_changed_handler_id)
-            self.blocked = True
+        self.on_key_press_event.handler.block()
+        self.on_textbuffer_changed.handler.block()
 
     def unblock_key_press(self):
-        if self.blocked:
-            self.editor.textview.handler_unblock(self.key_press_handler_id)
-            self.editor.textbuffer.handler_unblock(self.textbuffer_changed_handler_id)
-            self.blocked = False
+        self.on_key_press_event.handler.unblock()
+        self.on_textbuffer_changed.handler.unblock()
 
     def show(self, on_select):
         self.move_window(200, 300)
@@ -83,10 +75,12 @@ class GUI(object):
         if self.on_select:
             self.on_select(text)
     
+    @connect_external('textbuffer', 'changed')
     def on_textbuffer_changed(self, *args):    
         self.signals.text_updated.emit()        
         return False
         
+    @connect_external('textview', 'key-press-event')
     def on_key_press_event(self, textview, event):
         if event.keyval == Escape:
             self.hide()

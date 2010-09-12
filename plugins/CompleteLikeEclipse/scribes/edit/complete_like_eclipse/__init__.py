@@ -1,7 +1,7 @@
 from gettext import gettext as _
 from string import whitespace
 
-from scribes.helpers import TriggerManager, Trigger, weak_connect 
+from scribes.helpers import TriggerManager, Trigger, connect_external, connect_all 
 
 from signals import Signals 
 
@@ -19,12 +19,11 @@ trigger = Trigger('complete-word', '<alt>slash',
 class Plugin(object):
     def __init__(self, editor):
         self.editor = editor
+
         self.signals = Signals()
-        self.signals.connect_signals(self)
-        
         self.triggers = TriggerManager(editor)
-        self.triggers.connect_triggers(self)
-        
+        connect_all(self, self.signals, self.triggers, textbuffer=self.editor.textbuffer)
+
         self.block_word_reset = False
         self.words = None
         self.start_word = None
@@ -35,8 +34,6 @@ class Plugin(object):
         self.communicator = ProcessCommunicator(self.signals.sender, editor)
         self.extractor = TextExtractor(self.signals.sender, editor)
         self.buffer_monitor = BufferMonitor(self.signals.sender, editor)
-        
-        weak_connect(self.editor.textbuffer, 'changed', self, 'buffer_changed')
 
     def unload(self):
         self.signals.destroy.emit()
@@ -123,14 +120,14 @@ class Plugin(object):
                 self.editor.update_message(_("Word completed already"), "yes", 1)
                 return False
                 
-            self.block_word_reset = True             
+            self.buffer_changed.handler.block()             
             
             end = self.editor.cursor.copy()
             self.editor.textbuffer.delete(start, end)
             self.editor.textbuffer.insert(start, matches[idx])
             
             self.editor.response()
-            self.block_word_reset = False
+            self.buffer_changed.handler.unblock()             
         else:
             self.editor.update_message(_("No word to complete"), "no", 1)
 
@@ -141,9 +138,9 @@ class Plugin(object):
         self.words = words
         return False
         
+    @connect_external('textbuffer', 'changed')
     def buffer_changed(self, *args):
-        if not self.block_word_reset and self.start_word:
-            self.start_word = None
-            self.start_iter = None
+        self.start_word = None
+        self.start_iter = None
         
         return False
