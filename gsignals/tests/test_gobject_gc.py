@@ -66,8 +66,8 @@ class TestCase(unittest.TestCase):
         plugin_holder = [Plugin(wsignals(), checker)] 
         wplugin = weakref.ref(plugin_holder[0]) # to check plugin deletion
         
-        test1_handler_id = wplugin().test1.handler.id
-        test2_handler_id = wplugin().test2.handler.id
+        test1_handler_id = wplugin().test1_handler.id
+        test2_handler_id = wplugin().test2_handler.id
         
         # There is can be only one ref from holder list
         plugin_references = gc.get_referrers(wplugin())

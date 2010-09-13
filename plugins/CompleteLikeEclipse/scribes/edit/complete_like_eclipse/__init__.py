@@ -120,14 +120,14 @@ class Plugin(object):
                 self.editor.update_message(_("Word completed already"), "yes", 1)
                 return False
                 
-            self.buffer_changed.handler.block()             
+            self.buffer_changed_handler.block()             
             
             end = self.editor.cursor.copy()
             self.editor.textbuffer.delete(start, end)
             self.editor.textbuffer.insert(start, matches[idx])
             
             self.editor.response()
-            self.buffer_changed.handler.unblock()             
+            self.buffer_changed_handler.unblock()             
         else:
             self.editor.update_message(_("No word to complete"), "no", 1)
 

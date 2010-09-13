@@ -127,11 +127,11 @@ class Case(unittest.TestCase):
 
         h = Handler()
 
-        h.fire.handler.block()
+        h.fire_handler.block()
         h.signals.fire.emit()
         self.assertEqual(h.fired, 0)
         
-        h.fire.handler.unblock()
+        h.fire_handler.unblock()
         h.signals.fire.emit()
         self.assertEqual(h.fired, 1)
 
@@ -157,29 +157,52 @@ class Case(unittest.TestCase):
         w = WaterSignals()
         h = Handler(w)
 
-        self.assertRaises(Exception, h.fire.handler.block)
+        self.assertRaises(Exception, h.fire_handler.block)
         
-        h.fire.handler(signal_name='fire').block()
+        h.fire_handler(signal_name='fire').block()
         w.water.emit()
         h.signals.fire.emit()
         self.assertEqual(h.fired, 1)
         
-        h.fire.handler(signal_name='fire').unblock()
+        h.fire_handler(signal_name='fire').unblock()
         w.water.emit()
         h.signals.fire.emit()
         self.assertEqual(h.fired, 3)
         
-        h.fire.handler(sender_name='water').block()
+        h.fire_handler(sender_name='water').block()
         w.water.emit()
         h.signals.fire.emit()
         self.assertEqual(h.fired, 4)
         
-        h.fire.handler(sender_name='water').unblock()
+        h.fire_handler(sender_name='water').unblock()
         w.water.emit()
         h.signals.fire.emit()
         self.assertEqual(h.fired, 6)
         
-        h.fire.handler(sender=w.sender).block()
+        h.fire_handler(sender=w.sender).block()
         w.water.emit()
         h.signals.fire.emit()
         self.assertEqual(h.fired, 7)        
+
+
+
+    def test_multiple_handler_instances(self):
+        class Signals(SignalManager):
+            fire = Signal()
+
+        class Handler(object):
+            def __init__(self):
+                self.fired = 0
+                self.signals = Signals()
+                
+                connect_all(self, self.signals)
+            
+            @Signals.fire
+            def fire(self, *args):
+                self.fired += 1
+
+        h1 = Handler()
+        h2 = Handler()
+
+        h1.fire_handler.block()
+        h2.fire_handler.block()

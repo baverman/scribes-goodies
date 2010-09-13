@@ -20,12 +20,12 @@ class GUI(object):
         self.selection = self.treeview.get_selection()
 
     def block_key_press(self):
-        self.on_key_press_event.handler.block()
-        self.on_textbuffer_changed.handler.block()
+        self.on_key_press_event_handler.block()
+        self.on_textbuffer_changed_handler.block()
 
     def unblock_key_press(self):
-        self.on_key_press_event.handler.unblock()
-        self.on_textbuffer_changed.handler.unblock()
+        self.on_key_press_event_handler.unblock()
+        self.on_textbuffer_changed_handler.unblock()
 
     def show(self, on_select):
         self.move_window(200, 300)

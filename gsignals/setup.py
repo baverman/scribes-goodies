@@ -8,7 +8,7 @@ def run_tests():
 
 setup(
     name     = 'gsignals',
-    version  = '0.1',
+    version  = '0.2',
     author   = 'Anton Bobrov',
     author_email = 'bobrov@vl.ru',
     packages     = find_packages(),

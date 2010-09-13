@@ -10,13 +10,13 @@ def get_home():
 
 setup(
     name     = 'scribes.python.rope',
-    version  = '0.3',
+    version  = '0.3.1',
     author   = 'Anton Bobrov',
     author_email = 'bobrov@vl.ru',
     description = 'Scribes plugin. Python code autocompleter',
     long_description = open('README.txt').read(),
     zip_safe   = False,
-    install_requires = ['scribes.helpers>=0.4'],
+    install_requires = ['scribes.helpers>=0.5'],
     packages = find_packages(),
     include_package_data = True,
     namespace_packages = ['scribes'],

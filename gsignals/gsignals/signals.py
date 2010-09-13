@@ -136,7 +136,7 @@ class SignalManager(object):
         for attr, value in obj.__class__.__dict__.iteritems():
             for signal, connect_params in getattr(value, 'signals_to_connect', ()):
                 id = self.connect(signal, obj, attr, **connect_params)
-                append_handler_to_callback(value, id, self.sender, signal.name)    
+                append_handler_to_object(obj, attr, id, self.sender, signal.name)    
 
     def connect(self, signal, obj, attr, after, idle):
         """
@@ -181,13 +181,14 @@ def connect_external_signals(obj, **kwargs):
         for (sender_name, signal_name), connect_params in getattr(value, 'external_signals_to_connect', ()):
             sender = kwargs[sender_name]
             id = weak_connect(sender, signal_name, obj, attr, **connect_params)
-            append_handler_to_callback(value, id, sender, signal_name, sender_name)
+            append_handler_to_object(obj, attr, id, sender, signal_name, sender_name)
             
-def append_handler_to_callback(callback, handler_id, sender, signal_name, sender_name=None):
-    if not hasattr(callback, 'handler'):
-        callback.handler = HandlerHolder()
+def append_handler_to_object(obj, attr, handler_id, sender, signal_name, sender_name=None):
+    name = attr + '_handler' 
+    if not hasattr(obj, name):
+        setattr(obj, name, HandlerHolder())
         
-    callback.handler.add(handler_id, sender, signal_name, sender_name)
+    getattr(obj, name).add(handler_id, sender, signal_name, sender_name)
 
 def connect_all(obj, *signal_managers, **external_senders): 
     [s.connect_signals(obj) for s in signal_managers]
