@@ -11,6 +11,8 @@ class GUI(object):
         self.gui = editor.get_gui_object(globals(), 'gui.glade')
         self.gui.connect_signals(self)
         
+        self.blocked = False
+
         connect_all(self, textview=self.editor.textview, textbuffer=self.editor.textbuffer) 
 
         self.window = self.gui.get_object('window')
@@ -20,12 +22,16 @@ class GUI(object):
         self.selection = self.treeview.get_selection()
 
     def block_key_press(self):
-        self.on_key_press_event_handler.block()
-        self.on_textbuffer_changed_handler.block()
+        if not self.blocked:
+            self.on_key_press_event_handler.block()
+            self.on_textbuffer_changed_handler.block()
+            self.blocked = True
 
     def unblock_key_press(self):
-        self.on_key_press_event_handler.unblock()
-        self.on_textbuffer_changed_handler.unblock()
+        if self.blocked:
+            self.on_key_press_event_handler.unblock()
+            self.on_textbuffer_changed_handler.unblock()
+            self.blocked = False
 
     def show(self, on_select):
         self.move_window(200, 300)
