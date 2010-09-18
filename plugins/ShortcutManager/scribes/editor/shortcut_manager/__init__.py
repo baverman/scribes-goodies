@@ -120,7 +120,6 @@ class Plugin(object):
             self.patch_trigger_manager()
 
         self.add_preferences_menu_item()            
-        self.editor.show_full_view()
 
     def on_accel_edited(self, renderer, path, accel_key, accel_mods, hardware_keycode):
         iter = self.actions.get_iter(path)

@@ -10,7 +10,7 @@ def get_home():
 
 setup(
     name     = 'scribes.editor.shortcut-manager',
-    version  = '0.2',
+    version  = '0.2.1',
     author   = 'Anton Bobrov',
     author_email = 'bobrov@vl.ru',
     description = 'Shortcut manager for scribes editor',

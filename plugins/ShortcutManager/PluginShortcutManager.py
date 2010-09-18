@@ -1,6 +1,6 @@
 name = "Shortcut Manager plugin"
 authors = ["Anton Bobrov <bobrov@vl.ru>"]
-version = 0.1
+version = 0.2
 autoload = True
 class_name = "ShortcutManagerPlugin"
 short_description = "Manages shortcuts for scribes plugins"
