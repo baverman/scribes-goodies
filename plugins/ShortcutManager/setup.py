@@ -10,13 +10,14 @@ def get_home():
 
 setup(
     name     = 'scribes.editor.shortcut-manager',
-    version  = '0.1',
+    version  = '0.2',
     author   = 'Anton Bobrov',
     author_email = 'bobrov@vl.ru',
     description = 'Shortcut manager for scribes editor',
     zip_safe   = False,
     install_requires = ['scribes.helpers>=0.5'],
     packages = find_packages(),
+    include_package_data = True,
     namespace_packages = ['scribes'],
     data_files = [
         (os.path.join(get_home(), '.gnome2', 'scribes', 'plugins'), ['PluginShortcutManager.py']),
