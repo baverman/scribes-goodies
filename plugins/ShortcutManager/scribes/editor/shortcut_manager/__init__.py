@@ -12,14 +12,16 @@ from SCRIBES.Utils import open_database
 
 from scribes.helpers import connect_external, connect_all
 
-old_create_trigger = None
 shortcuts = {}
 
-def new_create_trigger(self, name, accelerator="", description="", category="", error=True, removable=True):
-    if name in shortcuts:
-        accelerator = shortcuts[name]
+def decorate_create_trigger(func):
+    def inner(self, name, accelerator="", description="", category="", error=True, removable=True):
+        if name in shortcuts:
+            accelerator = shortcuts[name]
 
-    return old_create_trigger(self, name, accelerator, description, category, error, removable)
+        return func(self, name, accelerator, description, category, error, removable)
+    
+    return inner
 
 # Very tricky, very dirty. Don't do that.
 def find_objects_of(cls):
@@ -54,9 +56,7 @@ class Plugin(object):
                 replace_accelerator(t.name, shortcuts[t.name], True)
 
     def patch_trigger_manager(self):
-        global old_create_trigger
-        old_create_trigger = TriggerManager.create_trigger
-        TriggerManager.create_trigger = new_create_trigger
+        TriggerManager.create_trigger = decorate_create_trigger(TriggerManager.create_trigger)
 
     def init_gui(self):
         if not self.gui:
@@ -66,8 +66,6 @@ class Plugin(object):
             self.window = self.gui.get_object('ActionWindow')
             self.actions = self.gui.get_object('actions_store')
             self.actions_view = self.gui.get_object('actions_treeview')
-            
-            self.actions_view.get_column(1).get_cell_renderers()[0].props.editable = True
             
     def add_preferences_menu_item(self):
         item = self.editor.create_menuitem('Key configuration', STOCK_PREFERENCES)
