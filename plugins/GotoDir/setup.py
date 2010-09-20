@@ -14,6 +14,7 @@ setup(
     author   = 'Anton Bobrov',
     author_email = 'bobrov@vl.ru',
     description = 'Scribes plugin. Opens current file directory in file manager',
+    long_description = open('README.rst').read(),
     zip_safe   = False,
     install_requires = ['scribes.helpers>=0.3dev'],
     data_files = [
