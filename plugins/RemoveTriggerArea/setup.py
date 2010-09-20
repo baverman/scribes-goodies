@@ -14,6 +14,7 @@ setup(
     author   = 'Anton Bobrov',
     author_email = 'bobrov@vl.ru',
     description = 'Removes trigger area from scribes editor',
+    long_description = open('README.rst').read(),
     zip_safe   = False,
     install_requires = ['scribes.helpers>=0.5'],
     data_files = [
