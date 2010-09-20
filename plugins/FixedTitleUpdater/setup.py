@@ -14,6 +14,7 @@ setup(
     author   = 'Anton Bobrov',
     author_email = 'bobrov@vl.ru',
     description = 'Scribes plugin. Showes pretty names for python modules in editor titlebar',
+    long_description = open('README.rst').read(),
     zip_safe   = False,
     data_files = [
         (os.path.join(get_home(), '.gnome2', 'scribes', 'plugins'), ['PluginFixedTitleUpdater.py']),
