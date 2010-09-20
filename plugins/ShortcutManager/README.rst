@@ -3,7 +3,7 @@ Shortcut Manager
 
 There is no any tool to change Scribes key bindings. All shortcuts are hard coded in python sources.
 I prefer Eclipse key scheme which distinguish from standard Scribes. So I decide to write this plugin
-for easy shortcut change.
+for easy shortcut changing.
 
 Using
 -----

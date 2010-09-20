@@ -14,6 +14,7 @@ setup(
     author   = 'Anton Bobrov',
     author_email = 'bobrov@vl.ru',
     description = 'Shortcut manager for scribes editor',
+    long_description = open('README.rst').read(),
     zip_safe   = False,
     install_requires = ['scribes.helpers>=0.5'],
     packages = find_packages(),
