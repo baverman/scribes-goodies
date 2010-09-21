@@ -13,6 +13,6 @@ This python spec tries to fix above issues.
 Installing
 ----------
 
-```sh
-  mkdir -p ~/.local/share/gtksourceview-2.0/language-specs
-  cp python.lang ~/.local/share/gtksourceview-2.0/language-specs/
+```bash
+    mkdir -p ~/.local/share/gtksourceview-2.0/language-specs
+    cp python.lang ~/.local/share/gtksourceview-2.0/language-specs/
