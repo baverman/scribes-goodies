@@ -5,13 +5,17 @@ import gobject
 
 name = "Fixed Quick Open plugin"
 authors = ["Anton Bobrov <bobrov@vl.ru>"]
-version = 0.1
+version = 0.2
 autoload = True
 class_name = "FixedQuickOpenPlugin"
 short_description = "Keep start directory from changing"
 long_description = "Patches original QuickOpen for emmiting only start directory"
 
-import quick_open_settings as settings
+try:
+    import quick_open_settings as settings
+except ImportError:
+    open(os.path.join(os.path.dirname(__file__), 'quick_open_settings.py'), 'w').write("recent_pathes = []\n")
+    import quick_open_settings as settings
 
 class FixedQuickOpenPlugin(object):
 
@@ -34,7 +38,6 @@ class FixedQuickOpenPlugin(object):
 
             if not root:
                 root = self.find_project_root(editor_uri)
-                print root
                 settings.recent_pathes.append(root)
 
             

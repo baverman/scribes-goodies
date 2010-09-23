@@ -10,7 +10,7 @@ def get_home():
 
 setup(
     name     = 'scribes.file.quick-open-fix',
-    version  = '0.1',
+    version  = '0.2',
     author   = 'Anton Bobrov',
     author_email = 'bobrov@vl.ru',
     description = 'Scribes plugin. Adds project support to stock quick open plugin',
