@@ -1,1 +1,2 @@
 include PluginGotoDir.py
+include README.rst

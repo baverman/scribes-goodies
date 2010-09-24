@@ -1,2 +1,3 @@
 include PluginShortcutManager.py
 recursive-include scribes *.glade
+include README.rst

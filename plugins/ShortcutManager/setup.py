@@ -1,16 +1,9 @@
 from setuptools import setup, find_packages
 import os.path
 
-def get_home():
-    if 'SUDO_USER' in os.environ:
-        return os.path.expanduser('~' + os.environ['SUDO_USER'])
-    else:
-        return os.path.expanduser('~')
-        
-
 setup(
     name     = 'scribes.editor.shortcut-manager',
-    version  = '0.2.2',
+    version  = '0.2.3',
     author   = 'Anton Bobrov',
     author_email = 'bobrov@vl.ru',
     description = 'Shortcut manager for scribes editor',
@@ -21,7 +14,7 @@ setup(
     include_package_data = True,
     namespace_packages = ['scribes'],
     data_files = [
-        (os.path.join(get_home(), '.gnome2', 'scribes', 'plugins'), ['PluginShortcutManager.py']),
+        ('scribes/plugins', ['PluginShortcutManager.py']),
     ],
     url = 'http://github.com/baverman/scribes-goodies',    
 )

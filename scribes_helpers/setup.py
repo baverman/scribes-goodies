@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name     = 'scribes.helpers',
-    version  = '0.5',
+    version  = '0.5.1',
     author   = 'Anton Bobrov',
     author_email = 'bobrov@vl.ru',
     packages     = find_packages(),
