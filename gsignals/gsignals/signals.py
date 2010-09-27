@@ -166,7 +166,7 @@ class BoundedSignal(object):
     def emit(self, *args):
         manager = self.manager()
         if manager: 
-            manager.sender.emit(self.signal.name, *args)
+            return manager.sender.emit(self.signal.name, *args)
 
 
 def connect_external(sender_name, signal_name, after=False, idle=False):
