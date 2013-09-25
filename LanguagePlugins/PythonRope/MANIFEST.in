@@ -1,2 +1,1 @@
 recursive-include scribes *.glade
-include PluginPythonRope.py

@@ -1,9 +1,17 @@
 from setuptools import setup, find_packages
+import os
 import os.path
+import glib
+
+def get_plugin_directory():
+    if os.getuid() == 0:
+        return x
+    
+# print("setuptools = dir %s" % dir(setuptools))
 
 setup(
     name     = 'scribes.python.rope',
-    version  = '0.3.3',
+    version  = '0.3.4',
     author   = 'Anton Bobrov',
     author_email = 'bobrov@vl.ru',
     description = 'Scribes plugin. Python code autocompleter',
@@ -14,7 +22,9 @@ setup(
     include_package_data = True,
     namespace_packages = ['scribes'],
     data_files = [
-        ('scribes/LanguagePlugins', ['PluginPythonRope.py']),
+        (('%s/scribes/LanguagePlugins' % glib.get_user_config_dir()),
+            ['PluginPythonRope.py']
+        )
     ],
     url = 'http://github.com/baverman/scribes-goodies',    
 )
